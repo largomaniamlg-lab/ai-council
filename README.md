@@ -36,6 +36,40 @@ por ti.
    ```
 6. Abre [http://localhost:3000](http://localhost:3000).
 
+## Probar en el movil (PWA)
+
+La app es una PWA instalable (icono, pantalla completa, sin tiendas de app). Para
+probarla en tu telefono (Android o iPhone), conecta el telefono a la **misma red
+WiFi** que este ordenador y sigue estos pasos:
+
+1. Arranca el servidor en modo movil (genera un certificado HTTPS autofirmado,
+   necesario para que el navegador ofrezca instalar la PWA):
+   ```bash
+   npm run dev:phone
+   ```
+2. En el telefono, abre el navegador (Chrome en Android, Safari en iPhone) y visita:
+   ```
+   https://10.242.152.87:3000
+   ```
+   (cambia la IP si tu ordenador tiene otra IP de WiFi; puedes verla con
+   `ipconfig` en Windows, buscando el adaptador "Wi-Fi").
+3. El navegador avisara de que el certificado no es de confianza (es
+   autofirmado, solo para pruebas locales) — acepta/continua para visitarlo.
+4. Instala la app:
+   - **Android/Chrome**: menu (los 3 puntos) → "Anadir a pantalla de inicio" o
+     el banner de instalacion que aparece solo.
+   - **iPhone/Safari**: boton compartir → "Anadir a pantalla de inicio".
+5. Se creara un icono en la pantalla de inicio que abre la app en modo
+   pantalla completa (sin barra de navegador).
+
+Nota: si cambias de red WiFi o tu ordenador cambia de IP, actualiza la IP en
+`next.config.ts` (`allowedDevOrigins`) y en la URL que abras en el telefono.
+
+Un build nativo instalable desde una tienda (APK firmado o app de iOS) es un
+paso adicional no incluido todavia; la PWA es la forma mas rapida de probar la
+app en el movil sin necesidad de Android Studio ni (sobre todo) de un Mac, que
+es imprescindible para compilar para iOS.
+
 ## Variables de entorno
 
 Ver [`.env.local.example`](.env.local.example). Resumen:
