@@ -5,9 +5,15 @@ import Sidebar from "@/components/Sidebar";
 import ModeSelector from "@/components/ModeSelector";
 import RolePicker from "@/components/RolePicker";
 import SpecialistCard from "@/components/SpecialistCard";
+import PendingCard from "@/components/PendingCard";
 import ActaPanel from "@/components/ActaPanel";
 import type { Project, Session } from "@/lib/data";
-import type { CouncilMode } from "@/config/councilRoles";
+import {
+  getRoleById,
+  resolveRolesForMode,
+  type CouncilMode,
+  type CouncilRole,
+} from "@/config/councilRoles";
 import type {
   AgentResponse,
   CouncilMinutes,
@@ -48,6 +54,7 @@ export default function AppShell({
   const [outcome, setOutcome] = useState<SessionOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pendingRoles, setPendingRoles] = useState<CouncilRole[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -92,6 +99,7 @@ export default function AppShell({
     setProblem("");
     setCurrentProblem(null);
     setResponses([]);
+    setPendingRoles([]);
     setMinutes(null);
     setDecision(null);
     setOutcome(null);
@@ -101,6 +109,7 @@ export default function AppShell({
   async function handleSelectSession(sessionId: string) {
     setSelectedSessionId(sessionId);
     setError(null);
+    setPendingRoles([]);
     const res = await fetch(`/api/sessions/${sessionId}`);
     const data = await res.json();
     if (data.error) {
@@ -114,6 +123,31 @@ export default function AppShell({
     setOutcome(data.outcome ?? null);
   }
 
+  function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  // Revela las respuestas una a una, con una breve pausa entre cada una,
+  // para que la sesion se sienta como una reunion en vivo en lugar de un
+  // volcado instantaneo de texto.
+  async function revealResponsesSequentially(allResponses: AgentResponse[]) {
+    let currentRound = allResponses[0]?.round ?? 1;
+
+    for (const r of allResponses) {
+      if (r.round !== currentRound) {
+        currentRound = r.round;
+        const roundRoles = allResponses
+          .filter((x) => x.round === currentRound)
+          .map((x) => getRoleById(x.roleId))
+          .filter((role): role is CouncilRole => Boolean(role));
+        setPendingRoles(roundRoles);
+      }
+      await sleep(500);
+      setResponses((prev) => [...prev, r]);
+      setPendingRoles((prev) => prev.filter((p) => p.id !== r.roleId));
+    }
+  }
+
   async function handleConsult() {
     if (!problem.trim()) return;
     setError(null);
@@ -124,6 +158,7 @@ export default function AppShell({
     setSelectedSessionId(null);
     setCurrentProblem(problem);
     setResponses([]);
+    setPendingRoles(resolveRolesForMode(mode, mode === "experto" ? manualRoleIds : undefined));
 
     try {
       const sessionRes = await fetch("/api/council/session", {
@@ -140,10 +175,11 @@ export default function AppShell({
       const sessionData = await sessionRes.json();
       if (!sessionRes.ok) {
         setError(sessionData.error ?? "Error al consultar al Consejo.");
+        setPendingRoles([]);
         return;
       }
 
-      setResponses(sessionData.responses ?? []);
+      await revealResponsesSequentially(sessionData.responses ?? []);
       if (sessionData.sessionId) {
         setSelectedSessionId(sessionData.sessionId);
         setSessions((prev) => [
@@ -182,6 +218,7 @@ export default function AppShell({
     } finally {
       setIsConsulting(false);
       setIsGeneratingMinutes(false);
+      setPendingRoles([]);
     }
   }
 
@@ -340,6 +377,9 @@ export default function AppShell({
           <div className="flex flex-col gap-3">
             {responses.map((r, i) => (
               <SpecialistCard key={`${r.roleId}-${r.round}-${i}`} response={r} />
+            ))}
+            {pendingRoles.map((role) => (
+              <PendingCard key={`pending-${role.id}`} role={role} />
             ))}
           </div>
 

@@ -20,6 +20,9 @@ export interface CouncilRole {
   model: string;
   color: string;
   isModerator?: boolean;
+  // Texto que se muestra mientras el especialista "delibera", para que la
+  // sesion se sienta como una reunion en vivo en lugar de una carga generica.
+  thinkingLabel: string;
 }
 
 // Modelo/proveedor por defecto para el MVP. Todos los roles usan el mismo
@@ -37,6 +40,7 @@ export const councilRoles: CouncilRole[] = [
     provider: DEFAULT_PROVIDER,
     model: DEFAULT_MODEL,
     color: "#dc2626",
+    thinkingLabel: "Evaluando riesgos...",
   },
   {
     id: "critico",
@@ -47,6 +51,7 @@ export const councilRoles: CouncilRole[] = [
     provider: DEFAULT_PROVIDER,
     model: DEFAULT_MODEL,
     color: "#7c3aed",
+    thinkingLabel: "Buscando debilidades...",
   },
   {
     id: "creativo",
@@ -57,6 +62,7 @@ export const councilRoles: CouncilRole[] = [
     provider: DEFAULT_PROVIDER,
     model: DEFAULT_MODEL,
     color: "#db2777",
+    thinkingLabel: "Generando ideas...",
   },
   {
     id: "investigador",
@@ -67,6 +73,7 @@ export const councilRoles: CouncilRole[] = [
     provider: DEFAULT_PROVIDER,
     model: DEFAULT_MODEL,
     color: "#0891b2",
+    thinkingLabel: "Buscando informacion...",
   },
   {
     id: "cfo",
@@ -77,6 +84,7 @@ export const councilRoles: CouncilRole[] = [
     provider: DEFAULT_PROVIDER,
     model: DEFAULT_MODEL,
     color: "#059669",
+    thinkingLabel: "Analizando numeros...",
   },
   {
     id: "legal",
@@ -87,6 +95,7 @@ export const councilRoles: CouncilRole[] = [
     provider: DEFAULT_PROVIDER,
     model: DEFAULT_MODEL,
     color: "#4338ca",
+    thinkingLabel: "Revisando aspectos legales...",
   },
   {
     id: "etico",
@@ -97,6 +106,7 @@ export const councilRoles: CouncilRole[] = [
     provider: DEFAULT_PROVIDER,
     model: DEFAULT_MODEL,
     color: "#0d9488",
+    thinkingLabel: "Evaluando impacto etico...",
   },
   {
     id: "abogado_diablo",
@@ -106,6 +116,7 @@ export const councilRoles: CouncilRole[] = [
     provider: DEFAULT_PROVIDER,
     model: DEFAULT_MODEL,
     color: "#ea580c",
+    thinkingLabel: "Buscando el contraargumento...",
   },
   {
     id: "moderador",
@@ -117,6 +128,7 @@ export const councilRoles: CouncilRole[] = [
     model: DEFAULT_MODEL,
     color: "#334155",
     isModerator: true,
+    thinkingLabel: "Redactando el acta...",
   },
 ];
 

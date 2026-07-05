@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { getModeratorRole } from "@/config/councilRoles";
+import PendingCard from "@/components/PendingCard";
 import type { CouncilMinutes, PresidentDecision, SessionOutcome } from "@/lib/types";
 
 function Section({ title, items }: { title: string; items: string[] }) {
@@ -100,9 +102,7 @@ export default function ActaPanel({
         Acta del Consejo
       </h2>
 
-      {isGeneratingMinutes && (
-        <p className="text-sm text-slate-500">El Moderador esta redactando el acta...</p>
-      )}
+      {isGeneratingMinutes && <PendingCard role={getModeratorRole()} />}
 
       {!isGeneratingMinutes && !minutes && (
         <p className="text-sm text-slate-400">
