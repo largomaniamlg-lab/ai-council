@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import { generateCouncilMinutes } from "@/lib/minutes";
 import { saveMinutes, isSupabaseConfigured } from "@/lib/data";
 import type { AgentResponse } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
 
 interface RequestBody {
   sessionId?: string | null;
   problem: string;
   responses: AgentResponse[];
   useDemoMode?: boolean;
+  locale?: Locale;
 }
 
 export async function POST(request: Request) {
@@ -18,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "JSON invalido en la peticion." }, { status: 400 });
   }
 
-  const { sessionId, problem, responses, useDemoMode } = body;
+  const { sessionId, problem, responses, useDemoMode, locale } = body;
 
   if (!problem || !Array.isArray(responses) || responses.length === 0) {
     return NextResponse.json(
@@ -27,7 +29,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const { minutes, markdown } = await generateCouncilMinutes(problem, responses, useDemoMode);
+  const { minutes, markdown } = await generateCouncilMinutes(
+    problem,
+    responses,
+    useDemoMode,
+    locale
+  );
 
   if (sessionId && isSupabaseConfigured()) {
     try {

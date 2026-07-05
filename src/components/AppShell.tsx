@@ -35,7 +35,7 @@ export default function AppShell({
   supabaseConfigured: boolean;
 }) {
   const { t } = useTranslation();
-  const { revealDelayMs } = useSettings();
+  const { revealDelayMs, locale } = useSettings();
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     initialProjects[0]?.id ?? null
@@ -174,6 +174,7 @@ export default function AppShell({
           mode,
           manualRoleIds: mode === "experto" ? manualRoleIds : undefined,
           useDemoMode,
+          locale,
         }),
       });
       const sessionData = await sessionRes.json();
@@ -209,6 +210,7 @@ export default function AppShell({
           problem,
           responses: sessionData.responses,
           useDemoMode,
+          locale,
         }),
       });
       const minutesData = await minutesRes.json();

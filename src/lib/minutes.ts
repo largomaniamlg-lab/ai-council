@@ -2,6 +2,8 @@ import { getModeratorRole } from "@/config/councilRoles";
 import { getProvider } from "@/lib/aiProviders";
 import { generateDemoMinutes } from "@/lib/demoContent";
 import { SIMULATOR_PROVIDER, SIMULATOR_MODEL } from "@/lib/simulatorEngine";
+import { getLanguageInstruction } from "@/lib/promptLocale";
+import type { Locale } from "@/lib/i18n";
 import type { AgentResponse, CouncilMinutes } from "@/lib/types";
 
 const JSON_INSTRUCTIONS = `
@@ -16,7 +18,11 @@ Responde UNICAMENTE con un objeto JSON valido (sin texto adicional, sin markdown
 }
 `;
 
-function buildModeratorPrompt(problem: string, responses: AgentResponse[]): string {
+function buildModeratorPrompt(
+  problem: string,
+  responses: AgentResponse[],
+  locale?: Locale
+): string {
   const reports = responses
     .map((r) => {
       const label = r.round > 1 ? `${r.roleName} (ronda ${r.round})` : r.roleName;
@@ -24,7 +30,12 @@ function buildModeratorPrompt(problem: string, responses: AgentResponse[]): stri
     })
     .join("\n\n");
 
-  return `Problema o decision planteado por el Presidente:\n${problem}\n\nInformes de los especialistas del Consejo:\n\n${reports}\n\n${JSON_INSTRUCTIONS}`;
+  // Los nombres de los campos JSON deben mantenerse en ingles (summary,
+  // agreements...); solo el contenido de los valores debe seguir el idioma
+  // elegido en Settings.
+  return `Problema o decision planteado por el Presidente:\n${problem}\n\nInformes de los especialistas del Consejo:\n\n${reports}\n\n${JSON_INSTRUCTIONS}\n\n${getLanguageInstruction(
+    locale
+  )} (Manten los nombres de los campos JSON en ingles; solo el contenido de los valores debe estar en ese idioma.)`;
 }
 
 function tryParseMinutes(raw: string): CouncilMinutes | null {
@@ -53,7 +64,8 @@ function tryParseMinutes(raw: string): CouncilMinutes | null {
 export async function generateCouncilMinutes(
   problem: string,
   responses: AgentResponse[],
-  useDemoMode = false
+  useDemoMode = false,
+  locale?: Locale
 ): Promise<{ minutes: CouncilMinutes; markdown: string }> {
   const moderator = getModeratorRole();
 
@@ -80,7 +92,7 @@ export async function generateCouncilMinutes(
       recommendation: "Configura la variable de entorno del proveedor y vuelve a intentarlo.",
     };
   } else {
-    const userPrompt = buildModeratorPrompt(problem, responses);
+    const userPrompt = buildModeratorPrompt(problem, responses, locale);
     try {
       const result = await provider.generate({
         model,

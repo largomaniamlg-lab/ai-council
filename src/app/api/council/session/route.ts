@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { runCouncil } from "@/lib/orchestrator";
 import { createSession, saveAgentResponses, isSupabaseConfigured } from "@/lib/data";
 import type { CouncilMode } from "@/config/councilRoles";
+import type { Locale } from "@/lib/i18n";
 
 interface RequestBody {
   projectId?: string;
@@ -10,6 +11,7 @@ interface RequestBody {
   mode: CouncilMode;
   manualRoleIds?: string[];
   useDemoMode?: boolean;
+  locale?: Locale;
 }
 
 export async function POST(request: Request) {
@@ -20,7 +22,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "JSON invalido en la peticion." }, { status: 400 });
   }
 
-  const { projectId, title, problem, mode, manualRoleIds, useDemoMode } = body;
+  const { projectId, title, problem, mode, manualRoleIds, useDemoMode, locale } = body;
 
   if (!problem || !problem.trim()) {
     return NextResponse.json({ error: "El problema o decision no puede estar vacio." }, { status: 400 });
@@ -29,7 +31,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Falta el modo del Consejo (mode)." }, { status: 400 });
   }
 
-  const result = await runCouncil({ problem, mode, manualRoleIds, useDemoMode });
+  const result = await runCouncil({ problem, mode, manualRoleIds, useDemoMode, locale });
 
   let sessionId: string | null = null;
   if (projectId && isSupabaseConfigured()) {

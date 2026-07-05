@@ -6,6 +6,8 @@ import {
 import { getProvider } from "@/lib/aiProviders";
 import { generateDemoResponse } from "@/lib/demoContent";
 import { SIMULATOR_PROVIDER, SIMULATOR_MODEL } from "@/lib/simulatorEngine";
+import { getLanguageInstruction } from "@/lib/promptLocale";
+import type { Locale } from "@/lib/i18n";
 import type { AgentResponse, OrchestratorResult } from "@/lib/types";
 
 export interface RunCouncilInput {
@@ -13,6 +15,7 @@ export interface RunCouncilInput {
   mode: CouncilMode;
   manualRoleIds?: string[];
   useDemoMode?: boolean;
+  locale?: Locale;
 }
 
 // Un unico Council Engine para ambos modos: Council Simulator (useDemoMode)
@@ -24,11 +27,17 @@ async function callSpecialist(
   problem: string,
   round: number,
   useDemoMode: boolean,
+  locale: Locale | undefined,
   context?: string
 ): Promise<AgentResponse> {
-  const userPrompt = context
+  const baseUserPrompt = context
     ? `Decision o problema planteado por el Presidente:\n${problem}\n\nInformes de otros especialistas en la ronda anterior:\n${context}\n\nResponde ahora reaccionando a los puntos de desacuerdo, manteniendo tu rol.`
     : `Decision o problema planteado por el Presidente:\n${problem}`;
+
+  // La instruccion de idioma va al final: el contenido generado debe
+  // seguir el idioma elegido en Settings, no el idioma en que esta escrito
+  // el prompt base del rol.
+  const userPrompt = `${baseUserPrompt}\n\n${getLanguageInstruction(locale)}`;
 
   const providerId = useDemoMode ? SIMULATOR_PROVIDER : role.provider;
   const model = useDemoMode ? SIMULATOR_MODEL : role.model;
@@ -85,6 +94,7 @@ export async function runCouncil({
   mode,
   manualRoleIds,
   useDemoMode = false,
+  locale,
 }: RunCouncilInput): Promise<OrchestratorResult> {
   const roles = resolveRolesForMode(mode, manualRoleIds);
 
@@ -93,7 +103,7 @@ export async function runCouncil({
   }
 
   const round1 = await Promise.all(
-    roles.map((role) => callSpecialist(role, problem, 1, useDemoMode))
+    roles.map((role) => callSpecialist(role, problem, 1, useDemoMode, locale))
   );
 
   if (mode !== "debate") {
@@ -107,7 +117,7 @@ export async function runCouncil({
     .join("\n");
 
   const round2 = await Promise.all(
-    roles.map((role) => callSpecialist(role, problem, 2, useDemoMode, contextForRound2))
+    roles.map((role) => callSpecialist(role, problem, 2, useDemoMode, locale, contextForRound2))
   );
 
   return {
