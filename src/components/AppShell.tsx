@@ -373,6 +373,10 @@ export default function AppShell({
 
           {currentProblem && (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+              <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                <span>&#127963;</span>
+                <span>{t("common.sessionStarted")}</span>
+              </div>
               <span className="font-semibold text-slate-500 dark:text-slate-400">
                 {t("form.currentProblemLabel")}
               </span>{" "}

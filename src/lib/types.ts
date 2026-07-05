@@ -9,6 +9,10 @@ export interface AgentResponse {
   prompt: string;
   response: string;
   error?: string;
+  // Autoevaluacion del especialista (0-100), si el modelo la ha incluido.
+  confidence?: number;
+  // Tiempo real que tardo la llamada al proveedor, en milisegundos.
+  elapsedMs?: number;
 }
 
 export interface OrchestratorResult {

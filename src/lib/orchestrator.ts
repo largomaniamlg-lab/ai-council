@@ -4,9 +4,10 @@ import {
   resolveRolesForMode,
 } from "@/config/councilRoles";
 import { getProvider } from "@/lib/aiProviders";
-import { generateDemoResponse } from "@/lib/demoContent";
+import { generateDemoResponse, getDemoConfidence } from "@/lib/demoContent";
 import { SIMULATOR_PROVIDER, SIMULATOR_MODEL } from "@/lib/simulatorEngine";
 import { getLanguageInstruction } from "@/lib/promptLocale";
+import { CONFIDENCE_INSTRUCTION, extractConfidence } from "@/lib/confidenceParsing";
 import type { Locale } from "@/lib/i18n";
 import type { AgentResponse, OrchestratorResult } from "@/lib/types";
 
@@ -36,13 +37,13 @@ async function callSpecialist(
 
   // La instruccion de idioma va al final: el contenido generado debe
   // seguir el idioma elegido en Settings, no el idioma en que esta escrito
-  // el prompt base del rol.
-  const userPrompt = `${baseUserPrompt}\n\n${getLanguageInstruction(locale)}`;
+  // el prompt base del rol. La de confianza va tras esa, como ultima linea.
+  const userPrompt = `${baseUserPrompt}\n\n${getLanguageInstruction(locale)}\n\n${CONFIDENCE_INSTRUCTION}`;
 
   const providerId = useDemoMode ? SIMULATOR_PROVIDER : role.provider;
   const model = useDemoMode ? SIMULATOR_MODEL : role.model;
 
-  const base: Omit<AgentResponse, "response" | "error"> = {
+  const base: Omit<AgentResponse, "response" | "error" | "confidence" | "elapsedMs"> = {
     roleId: role.id,
     roleName: role.name,
     provider: providerId,
@@ -52,6 +53,7 @@ async function callSpecialist(
   };
 
   const provider = getProvider(providerId);
+  const startedAt = Date.now();
 
   if (!provider.isConfigured()) {
     // Sin API key configurada todavia (ni siquiera la gratuita de
@@ -59,12 +61,18 @@ async function callSpecialist(
     // local para que la demo no se rompa mientras el Presidente termina
     // el setup.
     if (useDemoMode) {
-      return { ...base, response: generateDemoResponse(role, problem) };
+      return {
+        ...base,
+        response: generateDemoResponse(role, problem),
+        confidence: getDemoConfidence(role),
+        elapsedMs: Date.now() - startedAt,
+      };
     }
     return {
       ...base,
       response: "",
       error: `El proveedor "${providerId}" no esta configurado. Anade su API key en las variables de entorno.`,
+      elapsedMs: Date.now() - startedAt,
     };
   }
 
@@ -74,12 +82,15 @@ async function callSpecialist(
       systemPrompt: role.basePrompt,
       userPrompt,
     });
-    return { ...base, response: result.text };
+    const elapsedMs = Date.now() - startedAt;
+    const { text, confidence } = extractConfidence(result.text);
+    return { ...base, response: text, confidence, elapsedMs };
   } catch (err) {
     return {
       ...base,
       response: "",
       error: err instanceof Error ? err.message : "Error desconocido al consultar al especialista.",
+      elapsedMs: Date.now() - startedAt,
     };
   }
 }

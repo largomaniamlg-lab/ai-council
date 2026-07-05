@@ -1,10 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getModeratorRole } from "@/config/councilRoles";
 import PendingCard from "@/components/PendingCard";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import type { CouncilMinutes, PresidentDecision, SessionOutcome } from "@/lib/types";
+
+function AdjournedStamp() {
+  const { t } = useTranslation();
+  const [settled, setSettled] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setSettled(true), 50);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  return (
+    <div
+      className={`inline-flex items-center gap-1.5 self-start rounded border-2 border-emerald-600 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-emerald-600 transition-all duration-500 dark:border-emerald-500 dark:text-emerald-500 ${
+        settled ? "scale-100 rotate-0 opacity-100" : "scale-125 -rotate-6 opacity-0"
+      }`}
+    >
+      &#9989; {t("common.councilAdjourned")}
+    </div>
+  );
+}
 
 function Section({ title, items, noneLabel }: { title: string; items: string[]; noneLabel: string }) {
   return (
@@ -119,6 +139,8 @@ export default function ActaPanel({
 
       {minutes && (
         <>
+          <AdjournedStamp />
+
           <div className="flex gap-2">
             <button
               onClick={handleCopy}

@@ -10,6 +10,12 @@ export const nb: Dictionary = {
     presidentTag: "AI Council - President: deg",
     back: "Tilbake",
     roundLabel: "runde",
+    sessionStarted: "Radsokten er startet",
+    reportSubmitted: "Rapport innsendt",
+    confidenceLow: "Lav",
+    confidenceMedium: "Middels",
+    confidenceHigh: "Svaert hoy",
+    councilAdjourned: "Radet er avsluttet",
   },
   header: {
     openMenu: "Apne meny",

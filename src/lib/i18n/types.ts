@@ -19,6 +19,12 @@ export interface Dictionary {
     presidentTag: string;
     back: string;
     roundLabel: string;
+    sessionStarted: string;
+    reportSubmitted: string;
+    confidenceLow: string;
+    confidenceMedium: string;
+    confidenceHigh: string;
+    councilAdjourned: string;
   };
   header: {
     openMenu: string;

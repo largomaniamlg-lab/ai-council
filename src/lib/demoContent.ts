@@ -85,6 +85,25 @@ export function generateDemoResponse(role: CouncilRole, problem: string): string
   return `${DEMO_TAG}\n\n${role.name} analiza: "${problem}". (Sin plantilla especifica para este rol todavia.)`;
 }
 
+// Confianza fija por rol para el modo demo (plantillas locales), solo para
+// que la tarjeta de confianza tenga algo coherente que mostrar sin una IA
+// real detras.
+const DEMO_CONFIDENCE: Record<string, number> = {
+  riesgos: 72,
+  critico: 65,
+  creativo: 80,
+  investigador: 55,
+  cfo: 70,
+  legal: 68,
+  etico: 66,
+  abogado_diablo: 60,
+  moderador: 75,
+};
+
+export function getDemoConfidence(role: CouncilRole): number {
+  return DEMO_CONFIDENCE[role.id] ?? 65;
+}
+
 export function generateDemoMinutes(problem: string): CouncilMinutes {
   return {
     summary: `${DEMO_TAG} El Consejo analizo: "${problem}" en modo simulacion, sin llamadas reales a IA.`,
