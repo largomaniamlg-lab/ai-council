@@ -302,7 +302,7 @@ export default function AppShell({
             />
 
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Fuente de las respuestas
+              Motor del Consejo
             </label>
             <div className="mb-3 flex rounded-md bg-slate-100 p-1 text-sm font-medium">
               <button
@@ -312,7 +312,7 @@ export default function AppShell({
                   useDemoMode ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
                 }`}
               >
-                Simulacion (gratis)
+                Council Simulator
               </button>
               <button
                 type="button"
@@ -321,13 +321,15 @@ export default function AppShell({
                   !useDemoMode ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
                 }`}
               >
-                Real (usa API)
+                Live Mode
               </button>
             </div>
             {useDemoMode && (
               <p className="mb-3 text-xs text-slate-500">
-                Respuestas simuladas al instante para probar todo el flujo sin gastar
-                nada. Cambia a &quot;Real&quot; cuando tengas una API key configurada.
+                Respuestas simuladas al instante, gratis, para probar todo el flujo. El
+                mismo Consejo, la misma interfaz: cambia a &quot;Live Mode&quot; cuando
+                tengas una API key configurada y el motor pasa a responder de verdad,
+                sin que cambie nada mas en la app.
               </p>
             )}
 
