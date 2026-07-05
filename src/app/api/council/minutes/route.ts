@@ -7,6 +7,7 @@ interface RequestBody {
   sessionId?: string | null;
   problem: string;
   responses: AgentResponse[];
+  useDemoMode?: boolean;
 }
 
 export async function POST(request: Request) {
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "JSON invalido en la peticion." }, { status: 400 });
   }
 
-  const { sessionId, problem, responses } = body;
+  const { sessionId, problem, responses, useDemoMode } = body;
 
   if (!problem || !Array.isArray(responses) || responses.length === 0) {
     return NextResponse.json(
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { minutes, markdown } = await generateCouncilMinutes(problem, responses);
+  const { minutes, markdown } = await generateCouncilMinutes(problem, responses, useDemoMode);
 
   if (sessionId && isSupabaseConfigured()) {
     try {

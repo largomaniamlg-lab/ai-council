@@ -9,6 +9,7 @@ interface RequestBody {
   problem: string;
   mode: CouncilMode;
   manualRoleIds?: string[];
+  useDemoMode?: boolean;
 }
 
 export async function POST(request: Request) {
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "JSON invalido en la peticion." }, { status: 400 });
   }
 
-  const { projectId, title, problem, mode, manualRoleIds } = body;
+  const { projectId, title, problem, mode, manualRoleIds, useDemoMode } = body;
 
   if (!problem || !problem.trim()) {
     return NextResponse.json({ error: "El problema o decision no puede estar vacio." }, { status: 400 });
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Falta el modo del Consejo (mode)." }, { status: 400 });
   }
 
-  const result = await runCouncil({ problem, mode, manualRoleIds });
+  const result = await runCouncil({ problem, mode, manualRoleIds, useDemoMode });
 
   let sessionId: string | null = null;
   if (projectId && isSupabaseConfigured()) {

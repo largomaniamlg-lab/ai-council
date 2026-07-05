@@ -36,6 +36,8 @@ export default function AppShell({
   const [problem, setProblem] = useState("");
   const [mode, setMode] = useState<CouncilMode>("rapido");
   const [manualRoleIds, setManualRoleIds] = useState<string[]>([]);
+  // Por defecto en modo demo (gratis): no requiere ninguna API key configurada.
+  const [useDemoMode, setUseDemoMode] = useState(true);
 
   const [isConsulting, setIsConsulting] = useState(false);
   const [isGeneratingMinutes, setIsGeneratingMinutes] = useState(false);
@@ -132,6 +134,7 @@ export default function AppShell({
           problem,
           mode,
           manualRoleIds: mode === "experto" ? manualRoleIds : undefined,
+          useDemoMode,
         }),
       });
       const sessionData = await sessionRes.json();
@@ -165,6 +168,7 @@ export default function AppShell({
           sessionId: sessionData.sessionId ?? null,
           problem,
           responses: sessionData.responses,
+          useDemoMode,
         }),
       });
       const minutesData = await minutesRes.json();
@@ -259,6 +263,36 @@ export default function AppShell({
               rows={3}
               className="mb-3 w-full resize-none rounded-md border border-slate-300 p-2 text-sm"
             />
+
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Fuente de las respuestas
+            </label>
+            <div className="mb-3 flex rounded-md bg-slate-100 p-1 text-sm font-medium">
+              <button
+                type="button"
+                onClick={() => setUseDemoMode(true)}
+                className={`flex-1 rounded px-3 py-1.5 transition-colors ${
+                  useDemoMode ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+                }`}
+              >
+                Simulacion (gratis)
+              </button>
+              <button
+                type="button"
+                onClick={() => setUseDemoMode(false)}
+                className={`flex-1 rounded px-3 py-1.5 transition-colors ${
+                  !useDemoMode ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+                }`}
+              >
+                Real (usa API)
+              </button>
+            </div>
+            {useDemoMode && (
+              <p className="mb-3 text-xs text-slate-500">
+                Respuestas simuladas al instante para probar todo el flujo sin gastar
+                nada. Cambia a &quot;Real&quot; cuando tengas una API key configurada.
+              </p>
+            )}
 
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
               Modo

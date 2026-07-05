@@ -1,5 +1,6 @@
 import { getModeratorRole } from "@/config/councilRoles";
 import { getProvider } from "@/lib/aiProviders";
+import { generateDemoMinutes } from "@/lib/demoContent";
 import type { AgentResponse, CouncilMinutes } from "@/lib/types";
 
 const JSON_INSTRUCTIONS = `
@@ -50,12 +51,20 @@ function tryParseMinutes(raw: string): CouncilMinutes | null {
 // Markdown para copiar/exportar.
 export async function generateCouncilMinutes(
   problem: string,
-  responses: AgentResponse[]
+  responses: AgentResponse[],
+  useDemoMode = false
 ): Promise<{ minutes: CouncilMinutes; markdown: string }> {
   const moderator = getModeratorRole();
-  const provider = getProvider(moderator.provider);
 
   let minutes: CouncilMinutes;
+
+  // Modo demo: acta simulada al instante, sin gastar en ninguna API.
+  if (useDemoMode) {
+    minutes = generateDemoMinutes(problem);
+    return { minutes, markdown: minutesToMarkdown(problem, minutes) };
+  }
+
+  const provider = getProvider(moderator.provider);
 
   if (!provider.isConfigured()) {
     minutes = {
