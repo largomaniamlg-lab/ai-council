@@ -10,12 +10,15 @@ export const SIMULATOR_PROVIDER: ModelProvider = "openrouter";
 
 // Los modelos gratuitos (":free") de OpenRouter rotan y desaparecen sin
 // aviso (p.ej. DeepSeek R1 free y Qwen3 Coder free dejaron de existir a
-// finales de junio de 2026). Elegido tras comparar los que seguian activos
-// en julio de 2026: nemotron-3-ultra es el unico orientado a razonamiento
-// general (no solo codigo) con buen equilibrio calidad/velocidad para
-// roles tan distintos como Riesgos, CFO, Etico o Creativo.
-// Si deja de funcionar, comprueba openrouter.ai/models?max_price=0 y
-// sobreescribe el valor con la variable de entorno OPENROUTER_SIMULATOR_MODEL
-// (alternativa mas ligera y rapida: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free").
+// finales de junio de 2026). Se probaron en vivo los dos candidatos de
+// razonamiento general activos en julio de 2026:
+//   - nemotron-3-ultra-550b-a55b:free -> respuestas excelentes pero entre
+//     1 y 4+ minutos por especialista (demasiado lento para uso interactivo).
+//   - nemotron-3-nano-omni-30b-a3b-reasoning:free -> misma calidad de
+//     analisis (estructurado, con tablas, riesgos, escenarios) en ~40s.
+// Se elige el nano-omni por ser el unico con velocidad aceptable para una
+// app interactiva. Si deja de funcionar, comprueba
+// openrouter.ai/models?max_price=0 y sobreescribe el valor con la variable
+// de entorno OPENROUTER_SIMULATOR_MODEL.
 export const SIMULATOR_MODEL =
-  process.env.OPENROUTER_SIMULATOR_MODEL || "nvidia/nemotron-3-ultra-550b-a55b:free";
+  process.env.OPENROUTER_SIMULATOR_MODEL || "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free";
