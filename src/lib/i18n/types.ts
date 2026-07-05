@@ -112,6 +112,11 @@ export interface Dictionary {
     engineSection: string;
     engineHint: string;
     engineSimulatorModel: string;
+    engineProvider: string;
+    enginePlan: string;
+    engineStatus: string;
+    statusConnected: string;
+    statusNotConnected: string;
     apiStatusSection: string;
     apiStatusHint: string;
     apiConfigured: string;

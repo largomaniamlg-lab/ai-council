@@ -10,6 +10,12 @@ interface StatusResponse {
   providers: Record<string, boolean>;
   supabase: boolean;
   simulatorModel: string;
+  simulator: {
+    provider: string;
+    modelDisplayName: string;
+    plan: string;
+    connected: boolean;
+  };
 }
 
 const SPEED_PRESETS = { fast: 250, normal: 500, slow: 900 } as const;
@@ -172,12 +178,54 @@ export default function SettingsPage() {
         </SectionCard>
 
         <SectionCard title={t("settings.engineSection")}>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{t("settings.engineHint")}</p>
-          <div className="mt-2 rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-            <span className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              {t("settings.engineSimulatorModel")}
-            </span>
-            <div className="font-mono text-xs">{status?.simulatorModel ?? "..."}</div>
+          <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+            {t("settings.engineHint")}
+          </p>
+          <div className="divide-y divide-slate-100 rounded-md bg-slate-100 px-3 dark:divide-slate-700 dark:bg-slate-800">
+            <div className="flex items-center justify-between py-2 text-sm">
+              <span className="text-slate-500 dark:text-slate-400">
+                {t("settings.engineProvider")}
+              </span>
+              <span className="font-medium text-slate-800 dark:text-slate-100">
+                {status?.simulator.provider === "openrouter" ? "OpenRouter" : (status?.simulator.provider ?? "...")}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-2 text-sm">
+              <span className="text-slate-500 dark:text-slate-400">
+                {t("settings.engineSimulatorModel")}
+              </span>
+              <span className="font-medium text-slate-800 dark:text-slate-100">
+                {status?.simulator.modelDisplayName ?? "..."}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-2 text-sm">
+              <span className="text-slate-500 dark:text-slate-400">{t("settings.enginePlan")}</span>
+              <span className="font-medium text-slate-800 dark:text-slate-100">
+                {status?.simulator.plan ?? "..."}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-2 text-sm">
+              <span className="text-slate-500 dark:text-slate-400">
+                {t("settings.engineStatus")}
+              </span>
+              {status ? (
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    status.simulator.connected
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                      : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+                  }`}
+                >
+                  {status.simulator.connected
+                    ? t("settings.statusConnected")
+                    : t("settings.statusNotConnected")}
+                </span>
+              ) : (
+                <span className="text-xs text-slate-400 dark:text-slate-500">
+                  {t("settings.apiChecking")}
+                </span>
+              )}
+            </div>
           </div>
         </SectionCard>
 

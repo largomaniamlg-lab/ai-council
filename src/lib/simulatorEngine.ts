@@ -22,3 +22,18 @@ export const SIMULATOR_PROVIDER: ModelProvider = "openrouter";
 // de entorno OPENROUTER_SIMULATOR_MODEL.
 export const SIMULATOR_MODEL =
   process.env.OPENROUTER_SIMULATOR_MODEL || "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free";
+
+// Nombre legible para mostrar en Settings (la tarjeta "AI Provider"), en
+// vez del id crudo del modelo. Si se cambia SIMULATOR_MODEL a otro id no
+// listado aqui, cae en el propio id como respaldo.
+const MODEL_DISPLAY_NAMES: Record<string, string> = {
+  "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free": "Nemotron-3 Nano Omni",
+  "nvidia/nemotron-3-ultra-550b-a55b:free": "Nemotron-3 Ultra",
+};
+
+export function getSimulatorModelDisplayName(): string {
+  return MODEL_DISPLAY_NAMES[SIMULATOR_MODEL] ?? SIMULATOR_MODEL;
+}
+
+export const SIMULATOR_PLAN = "Free" as const;
+
