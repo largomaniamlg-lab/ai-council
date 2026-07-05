@@ -1,0 +1,176 @@
+import type { Dictionary } from "./types";
+
+export const nb: Dictionary = {
+  meta: {
+    title: "AI Council",
+    description: "AI Council - et beslutningssystem assistert av flere KI-er",
+  },
+  common: {
+    appName: "AI Council",
+    presidentTag: "AI Council - President: deg",
+    back: "Tilbake",
+    roundLabel: "runde",
+  },
+  header: {
+    openMenu: "Apne meny",
+  },
+  sidebar: {
+    closeMenu: "Lukk meny",
+    supabaseWarning:
+      "Supabase er ikke konfigurert. Du kan fortsatt sporre Radet, men prosjekter og okter blir ikke lagret. Se README.",
+    newProjectPlaceholder: "Nytt prosjekt...",
+    projectsLabel: "Prosjekter",
+    noProjects: "Ingen prosjekter enna.",
+    newConsultation: "+ Ny sporring",
+    historyLabel: "Okthistorikk",
+    noSessions: "Ingen okter enna.",
+    settingsLink: "Innstillinger",
+  },
+  form: {
+    problemLabel: "Beslutning eller problem",
+    problemPlaceholder: "F.eks: Bor jeg lansere BioPod som abonnement eller engangsbetaling?",
+    engineLabel: "Radets motor",
+    simulatorButton: "Council Simulator",
+    liveButton: "Live Mode",
+    simulatorHint:
+      'En enkelt gratis modell spiller alle spesialistene (samme Rad, samme grensesnitt). Uten API-nokkel brukes lokale maler i stedet. Bytt til "Live Mode" for at hver rolle skal bruke sin konfigurerte leverandor, uten at noe annet i appen endres.',
+    modeLabel: "Modus",
+    expertRolesLabel: "Spesialister som skal innkalles",
+    consultButton: "Sporr Radet",
+    consultingButton: "Sporrer Radet...",
+    currentProblemLabel: "Naverende problem:",
+  },
+  modes: {
+    rapido: { label: "Rask", description: "Risikodirektor + Kritisk analytiker. Lav kostnad." },
+    completo: {
+      label: "Fullt Rad",
+      description: "Risiko, Kritiker, Kreativ, Forsker, CFO og Ordstyrer.",
+    },
+    debate: {
+      label: "Debatt",
+      description: "Forste runde uavhengig, andre runde svarer pa uenigheter.",
+    },
+    experto: { label: "Ekspert", description: "Du velger selv hvilke spesialister som innkalles." },
+  },
+  roles: {
+    riesgos: {
+      name: "Risikodirektor",
+      shortDescription:
+        "Analyserer sannsynligheter, scenarier, planlegging, operasjonell risiko og feilpunkter.",
+      thinkingLabel: "Vurderer risiko...",
+    },
+    critico: {
+      name: "Kritisk analytiker",
+      shortDescription:
+        "Leter etter svakheter, uoverensstemmelser, skjulte antakelser og alternative scenarier.",
+      thinkingLabel: "Leter etter svakheter...",
+    },
+    creativo: {
+      name: "Kreativ direktor",
+      shortDescription:
+        "Genererer ideer, merkevarebygging, fortelling, design og uortodokse tilnarminger.",
+      thinkingLabel: "Genererer ideer...",
+    },
+    investigador: {
+      name: "Forsker",
+      shortDescription:
+        "Soker oppdatert informasjon, konkurrenter, tekniske data, lovgivning og referanser.",
+      thinkingLabel: "Innhenter informasjon...",
+    },
+    cfo: {
+      name: "Okonom / CFO",
+      shortDescription:
+        "Vurderer kostnader, lonnsomhet, kontantstrom, prising, finansiell risiko og avkastning.",
+      thinkingLabel: "Regner pa tallene...",
+    },
+    legal: {
+      name: "Juridisk / Compliance",
+      shortDescription:
+        "Avdekker juridisk risiko, personvern, kontrakter, lisenser og forpliktelser.",
+      thinkingLabel: "Vurderer juridiske forhold...",
+    },
+    etico: {
+      name: "Etikk / Omdomme",
+      shortDescription:
+        "Vurderer sosial pavirkning, tillit, omdomme, sikkerhet og utilsiktede konsekvenser.",
+      thinkingLabel: "Vurderer etisk pavirkning...",
+    },
+    abogado_diablo: {
+      name: "Djevelens advokat",
+      shortDescription: "Forsvarer det motsatte standpunktet for a unnga gruppetenkning.",
+      thinkingLabel: "Leter etter motargumentet...",
+    },
+    moderador: {
+      name: "Ordstyrer",
+      shortDescription:
+        "Ordner svarene, identifiserer enighet og uenighet, stiller sporsmal og lager det endelige referatet.",
+      thinkingLabel: "Skriver referatet...",
+    },
+  },
+  errors: {
+    consultFailed: "Feil ved sporring av Radet.",
+    minutesFailed: "Feil ved generering av referatet.",
+    unexpected: "Uventet feil.",
+  },
+  acta: {
+    title: "Radets referat",
+    waitingForResponse: "Det endelige referatet vises her nar Radet har svart.",
+    copyMarkdown: "Kopier Markdown",
+    copied: "Kopiert!",
+    exportMd: "Eksporter .md",
+    summary: "Sammendrag",
+    noSummary: "Ingen sammendrag",
+    agreements: "Enigheter",
+    disagreements: "Uenigheter",
+    risks: "Risikoer",
+    openQuestions: "Apne sporsmal",
+    none: "Ingen",
+    recommendation: "Anbefaling",
+    noRecommendation: "Ingen anbefaling",
+    presidentDecision: "Presidentens beslutning",
+    finalDecisionPlaceholder: "Din endelige beslutning...",
+    rationalePlaceholder: "Begrunnelse...",
+    expectedResultPlaceholder: "Forventet resultat...",
+    saveDecision: "Lagre beslutning",
+    decisionSaved: "Beslutning lagret ✓",
+    saving: "Lagrer...",
+    notPersistedNoProject:
+      "Denne okten er ikke lagret i et prosjekt, beslutningen blir ikke lagret varig.",
+    notPersistedNoSupabase:
+      "Supabase er ikke konfigurert: beslutningen lagres ikke varig, kun pa skjermen.",
+    registerOutcome: "Registrer faktisk resultat (senere)",
+    outcomeTitle: "Resultat og laerdom",
+    actualResultPlaceholder: "Hva skjedde i virkeligheten...",
+    whatWorkedPlaceholder: "Hva fungerte...",
+    whatFailedPlaceholder: "Hva feilet...",
+    lessonsPlaceholder: "Laerdom til neste Rad-okt...",
+    saveOutcome: "Lagre resultat",
+    outcomeSaved: "Resultat lagret ✓",
+  },
+  settings: {
+    title: "Innstillinger",
+    backToConsole: "Tilbake til Radet",
+    languageSection: "Sprak",
+    languageHint: "Endringer trer i kraft umiddelbart, ingen omlasting nodvendig.",
+    themeSection: "Tema",
+    themeLight: "Lyst",
+    themeDark: "Mork",
+    speedSection: "Avsloringshastighet",
+    speedHint: "Hvor raskt spesialistene avslorer svarene sine, en etter en.",
+    speedFast: "Rask",
+    speedNormal: "Normal",
+    speedSlow: "Sakte",
+    devModeSection: "Utviklermodus",
+    devModeHint: "Viser ekstra teknisk informasjon (leverandor, modell, prompter) for hvert svar.",
+    devModeOn: "Pa",
+    devModeOff: "Av",
+    engineSection: "Council Engine",
+    engineHint: "Modellen som Council Simulator bruker for alle roller na.",
+    engineSimulatorModel: "Simulatormodell",
+    apiStatusSection: "API-status",
+    apiStatusHint: "Kun visning. API-nokler settes bare pa serveren (.env.local).",
+    apiConfigured: "Konfigurert",
+    apiNotConfigured: "Ikke konfigurert",
+    apiChecking: "Sjekker...",
+  },
+};

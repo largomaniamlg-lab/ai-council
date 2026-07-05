@@ -3,16 +3,19 @@
 import { useState } from "react";
 import { getModeratorRole } from "@/config/councilRoles";
 import PendingCard from "@/components/PendingCard";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import type { CouncilMinutes, PresidentDecision, SessionOutcome } from "@/lib/types";
 
-function Section({ title, items }: { title: string; items: string[] }) {
+function Section({ title, items, noneLabel }: { title: string; items: string[]; noneLabel: string }) {
   return (
     <div>
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+        {title}
+      </h3>
       {items.length === 0 ? (
-        <p className="text-sm text-slate-400">Ninguno</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500">{noneLabel}</p>
       ) : (
-        <ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-slate-700">
+        <ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-slate-700 dark:text-slate-300">
           {items.map((item, i) => (
             <li key={i}>{item}</li>
           ))}
@@ -41,6 +44,7 @@ export default function ActaPanel({
   onSaveDecision: (decision: PresidentDecision) => Promise<void>;
   onSaveOutcome: (outcome: SessionOutcome) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [finalDecision, setFinalDecision] = useState(initialDecision?.finalDecision ?? "");
   const [rationale, setRationale] = useState(initialDecision?.rationale ?? "");
   const [expectedResult, setExpectedResult] = useState(initialDecision?.expectedResult ?? "");
@@ -55,6 +59,9 @@ export default function ActaPanel({
   const [outcomeSaved, setOutcomeSaved] = useState(Boolean(initialOutcome));
   const [savingOutcome, setSavingOutcome] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const inputClass =
+    "mb-2 w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100";
 
   async function handleSaveDecision() {
     if (!finalDecision.trim()) return;
@@ -97,16 +104,16 @@ export default function ActaPanel({
   }
 
   return (
-    <aside className="flex w-full flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:w-96 md:shrink-0 md:rounded-none md:border-y-0 md:border-r-0 md:border-l md:border-slate-200 md:shadow-none md:overflow-y-auto">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
-        Acta del Consejo
+    <aside className="flex w-full flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 md:w-96 md:shrink-0 md:rounded-none md:border-y-0 md:border-r-0 md:border-l md:shadow-none md:overflow-y-auto">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {t("acta.title")}
       </h2>
 
       {isGeneratingMinutes && <PendingCard role={getModeratorRole()} />}
 
       {!isGeneratingMinutes && !minutes && (
-        <p className="text-sm text-slate-400">
-          Aqui aparecera el acta final una vez el Consejo responda.
+        <p className="text-sm text-slate-400 dark:text-slate-500">
+          {t("acta.waitingForResponse")}
         </p>
       )}
 
@@ -115,78 +122,92 @@ export default function ActaPanel({
           <div className="flex gap-2">
             <button
               onClick={handleCopy}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400"
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400 dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500"
             >
-              {copied ? "Copiado!" : "Copiar Markdown"}
+              {copied ? t("acta.copied") : t("acta.copyMarkdown")}
             </button>
             <button
               onClick={handleExport}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400"
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-400 dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500"
             >
-              Exportar .md
+              {t("acta.exportMd")}
             </button>
           </div>
 
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Resumen
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              {t("acta.summary")}
             </h3>
-            <p className="mt-1 text-sm text-slate-700">{minutes.summary || "Sin resumen"}</p>
-          </div>
-
-          <Section title="Acuerdos" items={minutes.agreements} />
-          <Section title="Desacuerdos" items={minutes.disagreements} />
-          <Section title="Riesgos" items={minutes.risks} />
-          <Section title="Preguntas abiertas" items={minutes.openQuestions} />
-
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Recomendacion
-            </h3>
-            <p className="mt-1 text-sm text-slate-700">
-              {minutes.recommendation || "Sin recomendacion"}
+            <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
+              {minutes.summary || t("acta.noSummary")}
             </p>
           </div>
 
-          <hr className="border-slate-200" />
+          <Section title={t("acta.agreements")} items={minutes.agreements} noneLabel={t("acta.none")} />
+          <Section
+            title={t("acta.disagreements")}
+            items={minutes.disagreements}
+            noneLabel={t("acta.none")}
+          />
+          <Section title={t("acta.risks")} items={minutes.risks} noneLabel={t("acta.none")} />
+          <Section
+            title={t("acta.openQuestions")}
+            items={minutes.openQuestions}
+            noneLabel={t("acta.none")}
+          />
 
           <div>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Decision del Presidente
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              {t("acta.recommendation")}
+            </h3>
+            <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
+              {minutes.recommendation || t("acta.noRecommendation")}
+            </p>
+          </div>
+
+          <hr className="border-slate-200 dark:border-slate-700" />
+
+          <div>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              {t("acta.presidentDecision")}
             </h3>
             <textarea
               value={finalDecision}
               onChange={(e) => setFinalDecision(e.target.value)}
-              placeholder="Tu decision final..."
+              placeholder={t("acta.finalDecisionPlaceholder")}
               rows={3}
-              className="mb-2 w-full rounded-md border border-slate-300 p-2 text-sm"
+              className={inputClass}
             />
             <textarea
               value={rationale}
               onChange={(e) => setRationale(e.target.value)}
-              placeholder="Razonamiento..."
+              placeholder={t("acta.rationalePlaceholder")}
               rows={2}
-              className="mb-2 w-full rounded-md border border-slate-300 p-2 text-sm"
+              className={inputClass}
             />
             <textarea
               value={expectedResult}
               onChange={(e) => setExpectedResult(e.target.value)}
-              placeholder="Resultado esperado..."
+              placeholder={t("acta.expectedResultPlaceholder")}
               rows={2}
-              className="mb-2 w-full rounded-md border border-slate-300 p-2 text-sm"
+              className={inputClass}
             />
             <button
               onClick={handleSaveDecision}
               disabled={!finalDecision.trim() || savingDecision}
-              className="w-full rounded-md bg-slate-900 py-2 text-sm font-medium text-white disabled:opacity-40"
+              className="w-full rounded-md bg-slate-900 py-2 text-sm font-medium text-white disabled:opacity-40 dark:bg-slate-100 dark:text-slate-900"
             >
-              {decisionSaved ? "Decision guardada ✓" : savingDecision ? "Guardando..." : "Guardar decision"}
+              {decisionSaved
+                ? t("acta.decisionSaved")
+                : savingDecision
+                  ? t("acta.saving")
+                  : t("acta.saveDecision")}
             </button>
             {!sessionId && (
-              <p className="mt-1 text-xs text-amber-700">
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
                 {supabaseConfigured
-                  ? "Esta sesion no se ha guardado en un proyecto, la decision no se persistira."
-                  : "Supabase no configurado: la decision no se persistira, solo queda en pantalla."}
+                  ? t("acta.notPersistedNoProject")
+                  : t("acta.notPersistedNoSupabase")}
               </p>
             )}
           </div>
@@ -196,53 +217,53 @@ export default function ActaPanel({
               {!showOutcomeForm ? (
                 <button
                   onClick={() => setShowOutcomeForm(true)}
-                  className="w-full rounded-md border border-slate-300 py-2 text-sm font-medium text-slate-700 hover:border-slate-400"
+                  className="w-full rounded-md border border-slate-300 py-2 text-sm font-medium text-slate-700 hover:border-slate-400 dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500"
                 >
-                  Registrar resultado real (mas adelante)
+                  {t("acta.registerOutcome")}
                 </button>
               ) : (
                 <div>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    Resultado y aprendizajes
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                    {t("acta.outcomeTitle")}
                   </h3>
                   <textarea
                     value={actualResult}
                     onChange={(e) => setActualResult(e.target.value)}
-                    placeholder="Que ocurrio en la realidad..."
+                    placeholder={t("acta.actualResultPlaceholder")}
                     rows={2}
-                    className="mb-2 w-full rounded-md border border-slate-300 p-2 text-sm"
+                    className={inputClass}
                   />
                   <textarea
                     value={whatWorked}
                     onChange={(e) => setWhatWorked(e.target.value)}
-                    placeholder="Que funciono..."
+                    placeholder={t("acta.whatWorkedPlaceholder")}
                     rows={2}
-                    className="mb-2 w-full rounded-md border border-slate-300 p-2 text-sm"
+                    className={inputClass}
                   />
                   <textarea
                     value={whatFailed}
                     onChange={(e) => setWhatFailed(e.target.value)}
-                    placeholder="Que fallo..."
+                    placeholder={t("acta.whatFailedPlaceholder")}
                     rows={2}
-                    className="mb-2 w-full rounded-md border border-slate-300 p-2 text-sm"
+                    className={inputClass}
                   />
                   <textarea
                     value={lessons}
                     onChange={(e) => setLessons(e.target.value)}
-                    placeholder="Aprendizajes para el proximo Consejo..."
+                    placeholder={t("acta.lessonsPlaceholder")}
                     rows={2}
-                    className="mb-2 w-full rounded-md border border-slate-300 p-2 text-sm"
+                    className={inputClass}
                   />
                   <button
                     onClick={handleSaveOutcome}
                     disabled={savingOutcome}
-                    className="w-full rounded-md bg-slate-900 py-2 text-sm font-medium text-white disabled:opacity-40"
+                    className="w-full rounded-md bg-slate-900 py-2 text-sm font-medium text-white disabled:opacity-40 dark:bg-slate-100 dark:text-slate-900"
                   >
                     {outcomeSaved
-                      ? "Resultado guardado ✓"
+                      ? t("acta.outcomeSaved")
                       : savingOutcome
-                        ? "Guardando..."
-                        : "Guardar resultado"}
+                        ? t("acta.saving")
+                        : t("acta.saveOutcome")}
                   </button>
                 </div>
               )}

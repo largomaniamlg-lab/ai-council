@@ -14,6 +14,8 @@ import {
   type CouncilMode,
   type CouncilRole,
 } from "@/config/councilRoles";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import { useSettings } from "@/lib/settings/SettingsProvider";
 import type {
   AgentResponse,
   CouncilMinutes,
@@ -32,6 +34,8 @@ export default function AppShell({
   initialProjects: Project[];
   supabaseConfigured: boolean;
 }) {
+  const { t } = useTranslation();
+  const { revealDelayMs } = useSettings();
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     initialProjects[0]?.id ?? null
@@ -142,7 +146,7 @@ export default function AppShell({
           .filter((role): role is CouncilRole => Boolean(role));
         setPendingRoles(roundRoles);
       }
-      await sleep(500);
+      await sleep(revealDelayMs);
       setResponses((prev) => [...prev, r]);
       setPendingRoles((prev) => prev.filter((p) => p.id !== r.roleId));
     }
@@ -174,7 +178,7 @@ export default function AppShell({
       });
       const sessionData = await sessionRes.json();
       if (!sessionRes.ok) {
-        setError(sessionData.error ?? "Error al consultar al Consejo.");
+        setError(sessionData.error ?? t("errors.consultFailed"));
         setPendingRoles([]);
         return;
       }
@@ -211,10 +215,10 @@ export default function AppShell({
       if (minutesRes.ok) {
         setMinutes({ ...minutesData.minutes, markdown: minutesData.markdown });
       } else {
-        setError(minutesData.error ?? "Error al generar el acta.");
+        setError(minutesData.error ?? t("errors.minutesFailed"));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error inesperado.");
+      setError(err instanceof Error ? err.message : t("errors.unexpected"));
     } finally {
       setIsConsulting(false);
       setIsGeneratingMinutes(false);
@@ -242,18 +246,21 @@ export default function AppShell({
     });
   }
 
+  const labelClass =
+    "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500";
+
   return (
-    <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-slate-100 md:h-screen md:flex-row md:overflow-hidden">
-      <header className="flex items-center gap-3 border-b border-slate-200 bg-white p-3 md:hidden">
+    <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-slate-100 dark:bg-slate-950 md:h-screen md:flex-row md:overflow-hidden">
+      <header className="flex items-center gap-3 border-b border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900 md:hidden">
         <button
           onClick={() => setSidebarOpen(true)}
-          aria-label="Abrir menu"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-300 text-slate-700"
+          aria-label={t("header.openMenu")}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-200"
         >
-          <span className="sr-only">Abrir menu</span>
+          <span className="sr-only">{t("header.openMenu")}</span>
           &#9776;
         </button>
-        <span className="font-bold text-slate-900">AI Council</span>
+        <span className="font-bold text-slate-900 dark:text-slate-100">{t("common.appName")}</span>
       </header>
 
       {sidebarOpen && (
@@ -289,60 +296,53 @@ export default function AppShell({
 
       <main className="flex flex-1 flex-col p-4 md:overflow-y-auto md:p-6">
         <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4">
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Decision o problema
-            </label>
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <label className={labelClass}>{t("form.problemLabel")}</label>
             <textarea
               value={problem}
               onChange={(e) => setProblem(e.target.value)}
-              placeholder="Ej: Deberia lanzar BioPod como suscripcion o pago unico?"
+              placeholder={t("form.problemPlaceholder")}
               rows={3}
-              className="mb-3 w-full resize-none rounded-md border border-slate-300 p-2 text-sm"
+              className="mb-3 w-full resize-none rounded-md border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
 
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Motor del Consejo
-            </label>
-            <div className="mb-3 flex rounded-md bg-slate-100 p-1 text-sm font-medium">
+            <label className={labelClass}>{t("form.engineLabel")}</label>
+            <div className="mb-3 flex rounded-md bg-slate-100 p-1 text-sm font-medium dark:bg-slate-800">
               <button
                 type="button"
                 onClick={() => setUseDemoMode(true)}
                 className={`flex-1 rounded px-3 py-1.5 transition-colors ${
-                  useDemoMode ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+                  useDemoMode
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                    : "text-slate-500 dark:text-slate-400"
                 }`}
               >
-                Council Simulator
+                {t("form.simulatorButton")}
               </button>
               <button
                 type="button"
                 onClick={() => setUseDemoMode(false)}
                 className={`flex-1 rounded px-3 py-1.5 transition-colors ${
-                  !useDemoMode ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+                  !useDemoMode
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                    : "text-slate-500 dark:text-slate-400"
                 }`}
               >
-                Live Mode
+                {t("form.liveButton")}
               </button>
             </div>
             {useDemoMode && (
-              <p className="mb-3 text-xs text-slate-500">
-                Un unico modelo gratuito interpreta a todos los especialistas (mismo
-                Consejo, misma interfaz). Sin API key configurada, usa plantillas
-                locales de respaldo. Cambia a &quot;Live Mode&quot; para que cada rol
-                use el proveedor real configurado, sin que cambie nada mas en la app.
+              <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+                {t("form.simulatorHint")}
               </p>
             )}
 
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Modo
-            </label>
+            <label className={labelClass}>{t("form.modeLabel")}</label>
             <ModeSelector mode={mode} onChange={setMode} />
 
             {mode === "experto" && (
               <div className="mt-3">
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Especialistas a convocar
-                </label>
+                <label className={labelClass}>{t("form.expertRolesLabel")}</label>
                 <RolePicker
                   selected={manualRoleIds}
                   onToggle={(id) =>
@@ -361,17 +361,19 @@ export default function AppShell({
                 isConsulting ||
                 (mode === "experto" && manualRoleIds.length === 0)
               }
-              className="mt-4 w-full rounded-md bg-slate-900 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+              className="mt-4 w-full rounded-md bg-slate-900 py-2.5 text-sm font-semibold text-white disabled:opacity-40 dark:bg-slate-100 dark:text-slate-900"
             >
-              {isConsulting ? "Consultando al Consejo..." : "Consultar al Consejo"}
+              {isConsulting ? t("form.consultingButton") : t("form.consultButton")}
             </button>
 
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
           </div>
 
           {currentProblem && (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-              <span className="font-semibold text-slate-500">Problema en curso:</span>{" "}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+              <span className="font-semibold text-slate-500 dark:text-slate-400">
+                {t("form.currentProblemLabel")}
+              </span>{" "}
               {currentProblem}
             </div>
           )}
