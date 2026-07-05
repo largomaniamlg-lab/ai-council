@@ -5,6 +5,7 @@ import {
 } from "@/config/councilRoles";
 import { getProvider } from "@/lib/aiProviders";
 import { generateDemoResponse } from "@/lib/demoContent";
+import { SIMULATOR_PROVIDER, SIMULATOR_MODEL } from "@/lib/simulatorEngine";
 import type { AgentResponse, OrchestratorResult } from "@/lib/types";
 
 export interface RunCouncilInput {
@@ -14,6 +15,10 @@ export interface RunCouncilInput {
   useDemoMode?: boolean;
 }
 
+// Un unico Council Engine para ambos modos: Council Simulator (useDemoMode)
+// y Live Mode solo difieren en que proveedor/modelo se usa para generar
+// cada respuesta. El flujo (prompt por rol, una llamada por especialista,
+// misma forma de respuesta) es identico en los dos casos.
 async function callSpecialist(
   role: CouncilRole,
   problem: string,
@@ -25,33 +30,38 @@ async function callSpecialist(
     ? `Decision o problema planteado por el Presidente:\n${problem}\n\nInformes de otros especialistas en la ronda anterior:\n${context}\n\nResponde ahora reaccionando a los puntos de desacuerdo, manteniendo tu rol.`
     : `Decision o problema planteado por el Presidente:\n${problem}`;
 
+  const providerId = useDemoMode ? SIMULATOR_PROVIDER : role.provider;
+  const model = useDemoMode ? SIMULATOR_MODEL : role.model;
+
   const base: Omit<AgentResponse, "response" | "error"> = {
     roleId: role.id,
     roleName: role.name,
-    provider: role.provider,
-    model: role.model,
+    provider: providerId,
+    model,
     round,
     prompt: userPrompt,
   };
 
-  // Modo demo: respuestas simuladas al instante, sin gastar en ninguna API.
-  if (useDemoMode) {
-    return { ...base, response: generateDemoResponse(role, problem) };
-  }
-
-  const provider = getProvider(role.provider);
+  const provider = getProvider(providerId);
 
   if (!provider.isConfigured()) {
+    // Sin API key configurada todavia (ni siquiera la gratuita de
+    // OpenRouter para el Council Simulator): recurrimos a una plantilla
+    // local para que la demo no se rompa mientras el Presidente termina
+    // el setup.
+    if (useDemoMode) {
+      return { ...base, response: generateDemoResponse(role, problem) };
+    }
     return {
       ...base,
       response: "",
-      error: `El proveedor "${role.provider}" no esta configurado. Anade su API key en las variables de entorno.`,
+      error: `El proveedor "${providerId}" no esta configurado. Anade su API key en las variables de entorno.`,
     };
   }
 
   try {
     const result = await provider.generate({
-      model: role.model,
+      model,
       systemPrompt: role.basePrompt,
       userPrompt,
     });

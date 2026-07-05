@@ -326,10 +326,10 @@ export default function AppShell({
             </div>
             {useDemoMode && (
               <p className="mb-3 text-xs text-slate-500">
-                Respuestas simuladas al instante, gratis, para probar todo el flujo. El
-                mismo Consejo, la misma interfaz: cambia a &quot;Live Mode&quot; cuando
-                tengas una API key configurada y el motor pasa a responder de verdad,
-                sin que cambie nada mas en la app.
+                Un unico modelo gratuito interpreta a todos los especialistas (mismo
+                Consejo, misma interfaz). Sin API key configurada, usa plantillas
+                locales de respaldo. Cambia a &quot;Live Mode&quot; para que cada rol
+                use el proveedor real configurado, sin que cambie nada mas en la app.
               </p>
             )}
 

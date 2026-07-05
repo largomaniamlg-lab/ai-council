@@ -1,6 +1,7 @@
 import { getModeratorRole } from "@/config/councilRoles";
 import { getProvider } from "@/lib/aiProviders";
 import { generateDemoMinutes } from "@/lib/demoContent";
+import { SIMULATOR_PROVIDER, SIMULATOR_MODEL } from "@/lib/simulatorEngine";
 import type { AgentResponse, CouncilMinutes } from "@/lib/types";
 
 const JSON_INSTRUCTIONS = `
@@ -58,17 +59,20 @@ export async function generateCouncilMinutes(
 
   let minutes: CouncilMinutes;
 
-  // Modo demo: acta simulada al instante, sin gastar en ninguna API.
-  if (useDemoMode) {
-    minutes = generateDemoMinutes(problem);
-    return { minutes, markdown: minutesToMarkdown(problem, minutes) };
-  }
-
-  const provider = getProvider(moderator.provider);
+  const providerId = useDemoMode ? SIMULATOR_PROVIDER : moderator.provider;
+  const model = useDemoMode ? SIMULATOR_MODEL : moderator.model;
+  const provider = getProvider(providerId);
 
   if (!provider.isConfigured()) {
+    // Sin API key configurada todavia: si es el Council Simulator, cae en
+    // una plantilla local para no romper la demo mientras se termina el
+    // setup; en Live Mode se informa del proveedor que falta configurar.
+    if (useDemoMode) {
+      minutes = generateDemoMinutes(problem);
+      return { minutes, markdown: minutesToMarkdown(problem, minutes) };
+    }
     minutes = {
-      summary: "El Moderador no pudo generar el acta: falta configurar el proveedor de IA.",
+      summary: `El Moderador no pudo generar el acta: el proveedor "${providerId}" no esta configurado.`,
       agreements: [],
       disagreements: [],
       risks: [],
@@ -79,7 +83,7 @@ export async function generateCouncilMinutes(
     const userPrompt = buildModeratorPrompt(problem, responses);
     try {
       const result = await provider.generate({
-        model: moderator.model,
+        model,
         systemPrompt: moderator.basePrompt,
         userPrompt,
       });

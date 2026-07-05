@@ -17,9 +17,15 @@ por ti.
    ```bash
    cp .env.local.example .env.local
    ```
-3. Rellena al menos `OPENAI_API_KEY` en `.env.local` (imprescindible para poder consultar al
-   Consejo en este MVP; todos los roles se simulan con prompts distintos sobre el mismo
-   modelo).
+3. La app tiene dos motores intercambiables (mismo flujo, misma interfaz, ver
+   [Motores del Consejo](#motores-del-consejo)):
+   - **Council Simulator** (gratis): crea una cuenta en [openrouter.ai](https://openrouter.ai),
+     genera una API key sin tarjeta y ponla en `OPENROUTER_API_KEY`. Usa un modelo `:free` para
+     interpretar todos los roles.
+   - **Live Mode**: rellena `OPENAI_API_KEY` para que cada rol use el proveedor configurado en
+     `src/config/councilRoles.ts` (hoy, OpenAI para todos).
+   Sin ninguna key configurada, el Council Simulator sigue funcionando con plantillas locales de
+   respaldo (para no bloquear la demo mientras terminas el setup).
 4. (Opcional pero recomendado) Configura Supabase para guardar proyectos, sesiones, actas,
    decisiones y resultados:
    - Crea un proyecto en [supabase.com](https://supabase.com).
@@ -70,16 +76,33 @@ paso adicional no incluido todavia; la PWA es la forma mas rapida de probar la
 app en el movil sin necesidad de Android Studio ni (sobre todo) de un Mac, que
 es imprescindible para compilar para iOS.
 
+## Motores del Consejo
+
+La app tiene un unico Council Engine (`lib/orchestrator.ts` + `lib/minutes.ts`): recorre los
+roles convocados, genera un prompt distinto para cada uno y llama a un proveedor de IA. La
+interfaz, las tarjetas, el revelado progresivo y el acta son identicos sea cual sea el motor;
+lo unico que cambia es quien responde por debajo:
+
+- **Council Simulator** (toggle "Council Simulator" en la UI): fuerza a todos los roles y al
+  Moderador a usar un unico modelo gratuito via OpenRouter (`OPENROUTER_API_KEY` +
+  `OPENROUTER_SIMULATOR_MODEL`, ver `src/lib/simulatorEngine.ts`). Sirve para validar el metodo
+  del Consejo sin apenas coste. Si no hay key configurada, cae en plantillas locales
+  (`src/lib/demoContent.ts`) para que la demo nunca se rompa.
+- **Live Mode** (toggle "Live Mode"): cada rol usa el proveedor/modelo que tenga asignado en
+  `src/config/councilRoles.ts` (hoy, OpenAI para todos; el roadmap v1.5 asignara un proveedor
+  real distinto a cada rol).
+
 ## Variables de entorno
 
 Ver [`.env.local.example`](.env.local.example). Resumen:
 
 | Variable | Obligatoria | Uso |
 |---|---|---|
-| `OPENAI_API_KEY` | Si | Motor de IA usado por todos los roles en el MVP |
+| `OPENROUTER_API_KEY` | No | Motor del Council Simulator (gratis, sin tarjeta) |
+| `OPENROUTER_SIMULATOR_MODEL` | No | Sobreescribe el modelo `:free` usado por el Simulator |
+| `OPENAI_API_KEY` | No | Motor de Live Mode (todos los roles, hoy) |
 | `ANTHROPIC_API_KEY` | No | Reservada para v1.5 (Claude) |
 | `GOOGLE_API_KEY` | No | Reservada para v1.5 (Gemini) |
-| `OPENROUTER_API_KEY` | No | Reservada para v1.5 (OpenRouter) |
 | `XAI_API_KEY` | No | Reservada para v1.5 (Grok) |
 | `NEXT_PUBLIC_SUPABASE_URL` | No | Persistencia de proyectos/sesiones/actas |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | No | Cliente Supabase en navegador (reservado) |
@@ -92,8 +115,10 @@ src/
   config/councilRoles.ts       Roles fijos del Consejo: prompt base, modelo, color
   lib/aiProviders/             Interfaz comun AIProvider + adaptadores (openai activo,
                                 anthropic/gemini/openrouter/xai preparados para v1.5)
-  lib/orchestrator.ts          Convoca a los especialistas segun el modo elegido
+  lib/orchestrator.ts          Council Engine: convoca a los especialistas segun el modo elegido
   lib/minutes.ts               El Moderador sintetiza las respuestas en un acta (JSON + Markdown)
+  lib/simulatorEngine.ts       Proveedor/modelo unico usado por el Council Simulator
+  lib/demoContent.ts           Plantillas de respaldo si el Simulator no tiene API key
   lib/data.ts                  Acceso a Supabase (proyectos, sesiones, respuestas, actas...)
   lib/supabase/                Clientes de Supabase (server / browser)
   app/api/council/session      POST: inicia una deliberacion del Consejo
