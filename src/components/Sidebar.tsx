@@ -13,6 +13,8 @@ export default function Sidebar({
   selectedSessionId,
   onSelectSession,
   onNewConsultation,
+  open,
+  onClose,
 }: {
   projects: Project[];
   supabaseConfigured: boolean;
@@ -23,6 +25,8 @@ export default function Sidebar({
   selectedSessionId: string | null;
   onSelectSession: (id: string) => void;
   onNewConsultation: () => void;
+  open: boolean;
+  onClose: () => void;
 }) {
   const [newProjectName, setNewProjectName] = useState("");
   const [creating, setCreating] = useState(false);
@@ -40,10 +44,23 @@ export default function Sidebar({
   }
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col border-r border-slate-200 bg-slate-50 p-4">
-      <div className="mb-4">
-        <h1 className="text-lg font-bold text-slate-900">AI Council</h1>
-        <p className="text-xs text-slate-500">Consejo de IA - Presidente: tu</p>
+    <aside
+      className={`fixed inset-y-0 left-0 z-40 flex w-72 shrink-0 -translate-x-full flex-col overflow-y-auto border-r border-slate-200 bg-slate-50 p-4 transition-transform duration-200 ease-out md:static md:z-auto md:w-72 md:translate-x-0 ${
+        open ? "translate-x-0" : ""
+      }`}
+    >
+      <div className="mb-4 flex items-start justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-slate-900">AI Council</h1>
+          <p className="text-xs text-slate-500">Consejo de IA - Presidente: tu</p>
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Cerrar menu"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 md:hidden"
+        >
+          &#10005;
+        </button>
       </div>
 
       {!supabaseConfigured && (

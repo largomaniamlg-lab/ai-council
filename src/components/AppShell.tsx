@@ -45,6 +45,7 @@ export default function AppShell({
   const [decision, setDecision] = useState<PresidentDecision | null>(null);
   const [outcome, setOutcome] = useState<SessionOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -201,7 +202,26 @@ export default function AppShell({
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-100">
+    <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-slate-100 md:h-screen md:flex-row md:overflow-hidden">
+      <header className="flex items-center gap-3 border-b border-slate-200 bg-white p-3 md:hidden">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Abrir menu"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-300 text-slate-700"
+        >
+          <span className="sr-only">Abrir menu</span>
+          &#9776;
+        </button>
+        <span className="font-bold text-slate-900">AI Council</span>
+      </header>
+
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+        />
+      )}
+
       <Sidebar
         projects={projects}
         supabaseConfigured={supabaseConfigured}
@@ -209,15 +229,24 @@ export default function AppShell({
         onSelectProject={(id) => {
           setSelectedProjectId(id);
           resetConsultation();
+          setSidebarOpen(false);
         }}
         onCreateProject={handleCreateProject}
         sessions={sessions}
         selectedSessionId={selectedSessionId}
-        onSelectSession={handleSelectSession}
-        onNewConsultation={resetConsultation}
+        onSelectSession={(id) => {
+          handleSelectSession(id);
+          setSidebarOpen(false);
+        }}
+        onNewConsultation={() => {
+          resetConsultation();
+          setSidebarOpen(false);
+        }}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
-      <main className="flex flex-1 flex-col overflow-y-auto p-6">
+      <main className="flex flex-1 flex-col p-4 md:overflow-y-auto md:p-6">
         <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4">
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -279,20 +308,36 @@ export default function AppShell({
               <SpecialistCard key={`${r.roleId}-${r.round}-${i}`} response={r} />
             ))}
           </div>
+
+          <div className="md:hidden">
+            <ActaPanel
+              key={`${selectedSessionId ?? "draft"}-mobile`}
+              minutes={minutes}
+              isGeneratingMinutes={isGeneratingMinutes}
+              sessionId={selectedSessionId}
+              supabaseConfigured={supabaseConfigured}
+              initialDecision={decision}
+              initialOutcome={outcome}
+              onSaveDecision={handleSaveDecision}
+              onSaveOutcome={handleSaveOutcome}
+            />
+          </div>
         </div>
       </main>
 
-      <ActaPanel
-        key={selectedSessionId ?? "draft"}
-        minutes={minutes}
-        isGeneratingMinutes={isGeneratingMinutes}
-        sessionId={selectedSessionId}
-        supabaseConfigured={supabaseConfigured}
-        initialDecision={decision}
-        initialOutcome={outcome}
-        onSaveDecision={handleSaveDecision}
-        onSaveOutcome={handleSaveOutcome}
-      />
+      <div className="hidden md:block">
+        <ActaPanel
+          key={`${selectedSessionId ?? "draft"}-desktop`}
+          minutes={minutes}
+          isGeneratingMinutes={isGeneratingMinutes}
+          sessionId={selectedSessionId}
+          supabaseConfigured={supabaseConfigured}
+          initialDecision={decision}
+          initialOutcome={outcome}
+          onSaveDecision={handleSaveDecision}
+          onSaveOutcome={handleSaveOutcome}
+        />
+      </div>
     </div>
   );
 }

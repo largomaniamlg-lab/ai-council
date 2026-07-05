@@ -95,7 +95,7 @@ export default function ActaPanel({
   }
 
   return (
-    <aside className="flex w-96 shrink-0 flex-col gap-4 overflow-y-auto border-l border-slate-200 bg-white p-4">
+    <aside className="flex w-full flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:w-96 md:shrink-0 md:rounded-none md:border-y-0 md:border-r-0 md:border-l md:border-slate-200 md:shadow-none md:overflow-y-auto">
       <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
         Acta del Consejo
       </h2>
