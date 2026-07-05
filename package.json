@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:phone": "next dev --experimental-https --experimental-https-key ./certs/localhost-key.pem --experimental-https-cert ./certs/localhost.pem",
+    "dev:tunnel": "node scripts/dev-with-tunnel.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

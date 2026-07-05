@@ -71,6 +71,27 @@ WiFi** que este ordenador y sigue estos pasos:
 Nota: si cambias de red WiFi o tu ordenador cambia de IP, actualiza la IP en
 `next.config.ts` (`allowedDevOrigins`) y en la URL que abras en el telefono.
 
+## Compartir con otras personas (tunel publico, un solo comando)
+
+Si quieres que alguien pruebe la app sin estar en tu misma red WiFi (por ejemplo,
+un amigo desde su casa), usa:
+
+```bash
+npm run dev:tunnel
+```
+
+Esto arranca Next.js y un tunel publico de Cloudflare a la vez, y en cuanto esta
+listo imprime un cuadro con la URL publica (tipo `https://algo.trycloudflare.com`),
+lista para compartir. Si `cloudflared` no esta instalado, el script sigue
+arrancando el servidor en local y te avisa con el comando exacto para instalarlo
+(`winget install Cloudflare.cloudflared` en Windows, `brew install cloudflared`
+en macOS). Si el tunel se cae en cualquier momento, veras un aviso claro en la
+terminal.
+
+Ten en cuenta que la URL es temporal: solo funciona mientras este comando siga
+corriendo en tu ordenador. Para un enlace permanente que no dependa de tu PC,
+consulta la seccion de despliegue en Vercel (proximo hito del proyecto).
+
 Un build nativo instalable desde una tienda (APK firmado o app de iOS) es un
 paso adicional no incluido todavia; la PWA es la forma mas rapida de probar la
 app en el movil sin necesidad de Android Studio ni (sobre todo) de un Mac, que
