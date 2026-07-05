@@ -4,6 +4,9 @@ import { saveMinutes, isSupabaseConfigured } from "@/lib/data";
 import type { AgentResponse } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 
+// Ver nota en app/api/council/session/route.ts sobre el limite de Vercel.
+export const maxDuration = 120;
+
 interface RequestBody {
   sessionId?: string | null;
   problem: string;

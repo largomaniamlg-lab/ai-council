@@ -4,6 +4,11 @@ import { createSession, saveAgentResponses, isSupabaseConfigured } from "@/lib/d
 import type { CouncilMode } from "@/config/councilRoles";
 import type { Locale } from "@/lib/i18n";
 
+// El Council Simulator (modelo gratuito) puede tardar 15-90s por
+// especialista. El limite por defecto de Vercel (Hobby, Fluid Compute) es
+// de 300s, mas que suficiente; lo dejamos explicito con margen.
+export const maxDuration = 120;
+
 interface RequestBody {
   projectId?: string;
   title?: string;
