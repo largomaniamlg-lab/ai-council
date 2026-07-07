@@ -147,4 +147,14 @@ export interface Dictionary {
     apiNotConfigured: string;
     apiChecking: string;
   };
+  discovery: {
+    checking: string;
+    title: string;
+    completenessLabel: string;
+    missingInformationLabel: string;
+    questionsLabel: string;
+    answerPlaceholder: string;
+    continueButton: string;
+    continuing: string;
+  };
 }

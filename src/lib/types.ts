@@ -59,3 +59,22 @@ export interface SessionOutcome {
   whatFailed: string;
   lessons: string;
 }
+
+// v0.5 Discovery Mode: preguntas que el Consejo hizo en una ronda de
+// Discovery y la respuesta que dio el Presidente.
+export interface DiscoveryQA {
+  questions: string[];
+  answer: string;
+}
+
+// Evaluacion del Moderador sobre si hay informacion suficiente para
+// deliberar con fiabilidad ("Understand First. Deliberate Later.").
+export interface DiscoveryAssessment {
+  sufficient: boolean;
+  reason: string;
+  missingInformation: string[];
+  questions: string[];
+  // Estimacion propia del Consejo (0-100) de cuanta informacion necesaria
+  // ya tiene. Es una autoevaluacion del modelo, no una medida objetiva.
+  completeness: number;
+}

@@ -7,6 +7,7 @@ import RolePicker from "@/components/RolePicker";
 import SpecialistCard from "@/components/SpecialistCard";
 import PendingCard from "@/components/PendingCard";
 import ActaPanel from "@/components/ActaPanel";
+import DiscoveryPanel from "@/components/DiscoveryPanel";
 import type { Project, Session } from "@/lib/data";
 import {
   getRoleById,
@@ -19,6 +20,8 @@ import { useSettings } from "@/lib/settings/SettingsProvider";
 import type {
   AgentResponse,
   CouncilMinutes,
+  DiscoveryAssessment,
+  DiscoveryQA,
   PresidentDecision,
   SessionOutcome,
 } from "@/lib/types";
@@ -66,6 +69,15 @@ export default function AppShell({
   const [isChallenging, setIsChallenging] = useState(false);
   const [isAskingModerator, setIsAskingModerator] = useState(false);
   const [challengeError, setChallengeError] = useState<string | null>(null);
+
+  // v0.5 Discovery Mode: "Understand First. Deliberate Later." Antes de
+  // convocar a los especialistas, el Moderador evalua si hay informacion
+  // suficiente; si no, pregunta en vez de forzar un veredicto prematuro.
+  const [discoveryStatus, setDiscoveryStatus] = useState<"idle" | "checking" | "awaiting_answer">(
+    "idle"
+  );
+  const [discoveryHistory, setDiscoveryHistory] = useState<DiscoveryQA[]>([]);
+  const [discoveryAssessment, setDiscoveryAssessment] = useState<DiscoveryAssessment | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,6 +128,9 @@ export default function AppShell({
     setOutcome(null);
     setError(null);
     setChallengeError(null);
+    setDiscoveryStatus("idle");
+    setDiscoveryHistory([]);
+    setDiscoveryAssessment(null);
   }
 
   async function handleSelectSession(sessionId: string) {
@@ -161,16 +176,31 @@ export default function AppShell({
     }
   }
 
-  async function handleConsult() {
-    if (!problem.trim()) return;
-    setError(null);
-    setChallengeError(null);
+  function buildEnrichedProblem(original: string, history: DiscoveryQA[]): string {
+    if (history.length === 0) return original;
+    const context = history
+      .map(
+        (h, i) =>
+          `Preguntas del Consejo (Discovery, ronda ${i + 1}): ${h.questions.join(" | ")}\nRespuesta del Presidente: ${h.answer}`
+      )
+      .join("\n\n");
+    return `${original}\n\nContexto adicional aportado por el Presidente durante Discovery:\n${context}`;
+  }
+
+  async function checkDiscovery(history: DiscoveryQA[], round: number): Promise<DiscoveryAssessment> {
+    const res = await fetch("/api/council/discovery", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ problem, history, round, useDemoMode, locale }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? t("errors.unexpected"));
+    return data.assessment as DiscoveryAssessment;
+  }
+
+  async function runFullConsultation(enrichedProblem: string) {
     setIsConsulting(true);
-    setMinutesHistory([]);
-    setDecision(null);
-    setOutcome(null);
     setSelectedSessionId(null);
-    setCurrentProblem(problem);
     setResponses([]);
     setPendingRoles(resolveRolesForMode(mode, mode === "experto" ? manualRoleIds : undefined));
 
@@ -180,7 +210,8 @@ export default function AppShell({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectId: selectedProjectId ?? undefined,
-          problem,
+          title: problem.slice(0, 80),
+          problem: enrichedProblem,
           mode,
           manualRoleIds: mode === "experto" ? manualRoleIds : undefined,
           useDemoMode,
@@ -202,7 +233,7 @@ export default function AppShell({
             id: sessionData.sessionId,
             project_id: selectedProjectId!,
             title: problem.slice(0, 80),
-            problem,
+            problem: enrichedProblem,
             mode,
             created_at: new Date().toISOString(),
           },
@@ -217,7 +248,7 @@ export default function AppShell({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId: sessionData.sessionId ?? null,
-          problem,
+          problem: enrichedProblem,
           responses: sessionData.responses,
           useDemoMode,
           locale,
@@ -235,6 +266,58 @@ export default function AppShell({
       setIsConsulting(false);
       setIsGeneratingMinutes(false);
       setPendingRoles([]);
+    }
+  }
+
+  // v0.5 Discovery Mode: al pulsar "Consult the Council" no se convoca a
+  // los especialistas directamente. Primero el Moderador evalua si hay
+  // informacion suficiente ("Understand First. Deliberate Later.").
+  async function handleConsult() {
+    if (!problem.trim()) return;
+    setError(null);
+    setChallengeError(null);
+    setMinutesHistory([]);
+    setDecision(null);
+    setOutcome(null);
+    setCurrentProblem(problem);
+    setDiscoveryHistory([]);
+    setDiscoveryAssessment(null);
+    setDiscoveryStatus("checking");
+
+    try {
+      const assessment = await checkDiscovery([], 1);
+      if (assessment.sufficient) {
+        setDiscoveryStatus("idle");
+        await runFullConsultation(problem);
+      } else {
+        setDiscoveryAssessment(assessment);
+        setDiscoveryStatus("awaiting_answer");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("errors.unexpected"));
+      setDiscoveryStatus("idle");
+    }
+  }
+
+  async function handleAnswerDiscovery(answer: string) {
+    if (!discoveryAssessment) return;
+    const newHistory = [...discoveryHistory, { questions: discoveryAssessment.questions, answer }];
+    setDiscoveryHistory(newHistory);
+    setDiscoveryStatus("checking");
+
+    try {
+      const assessment = await checkDiscovery(newHistory, newHistory.length + 1);
+      if (assessment.sufficient) {
+        setDiscoveryStatus("idle");
+        setDiscoveryAssessment(null);
+        await runFullConsultation(buildEnrichedProblem(problem, newHistory));
+      } else {
+        setDiscoveryAssessment(assessment);
+        setDiscoveryStatus("awaiting_answer");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("errors.unexpected"));
+      setDiscoveryStatus("idle");
     }
   }
 
@@ -452,11 +535,14 @@ export default function AppShell({
               disabled={
                 !problem.trim() ||
                 isConsulting ||
+                discoveryStatus !== "idle" ||
                 (mode === "experto" && manualRoleIds.length === 0)
               }
               className="mt-4 w-full rounded-md bg-slate-900 py-2.5 text-sm font-semibold text-white disabled:opacity-40 dark:bg-slate-100 dark:text-slate-900"
             >
-              {isConsulting ? t("form.consultingButton") : t("form.consultButton")}
+              {isConsulting || discoveryStatus === "checking"
+                ? t("form.consultingButton")
+                : t("form.consultButton")}
             </button>
 
             {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -473,6 +559,18 @@ export default function AppShell({
               </span>{" "}
               {currentProblem}
             </div>
+          )}
+
+          {discoveryStatus === "checking" && !discoveryAssessment && (
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t("discovery.checking")}</p>
+          )}
+
+          {discoveryAssessment && discoveryStatus !== "idle" && (
+            <DiscoveryPanel
+              assessment={discoveryAssessment}
+              isSubmitting={discoveryStatus === "checking"}
+              onAnswer={handleAnswerDiscovery}
+            />
           )}
 
           <div className="flex flex-col gap-3">

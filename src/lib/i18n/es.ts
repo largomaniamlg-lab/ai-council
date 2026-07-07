@@ -204,4 +204,14 @@ export const es: Dictionary = {
     apiNotConfigured: "No configurada",
     apiChecking: "Comprobando...",
   },
+  discovery: {
+    checking: "El Consejo esta evaluando si tiene informacion suficiente...",
+    title: "🏛 Discovery: informacion insuficiente para deliberar",
+    completenessLabel: "Informacion estimada",
+    missingInformationLabel: "Falta saber",
+    questionsLabel: "El Consejo necesita que respondas a esto antes de deliberar:",
+    answerPlaceholder: "Responde aqui a las preguntas del Consejo...",
+    continueButton: "Continuar",
+    continuing: "Enviando tu respuesta al Consejo...",
+  },
 };

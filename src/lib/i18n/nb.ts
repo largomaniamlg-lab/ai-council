@@ -204,4 +204,14 @@ export const nb: Dictionary = {
     apiNotConfigured: "Ikke konfigurert",
     apiChecking: "Sjekker...",
   },
+  discovery: {
+    checking: "Radet vurderer om det har nok informasjon...",
+    title: "🏛 Discovery: ikke nok informasjon til a deliberere enna",
+    completenessLabel: "Estimert informasjon",
+    missingInformationLabel: "Mangler fortsatt",
+    questionsLabel: "Radet trenger at du svarer pa dette for deliberasjon kan starte:",
+    answerPlaceholder: "Svar pa Radets sporsmal her...",
+    continueButton: "Fortsett",
+    continuing: "Sender svaret ditt til Radet...",
+  },
 };

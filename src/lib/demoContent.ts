@@ -1,5 +1,5 @@
 import type { CouncilRole } from "@/config/councilRoles";
-import type { CouncilMinutes } from "@/lib/types";
+import type { CouncilMinutes, DiscoveryAssessment } from "@/lib/types";
 
 // Contenido simulado para el Modo Demo: permite probar todo el flujo del
 // Consejo (roles, acta, decision, resultado) sin gastar nada en APIs de IA.
@@ -117,6 +117,34 @@ export function generateDemoChallengeResponse(
 ${role.name} reconsidera "${problem}" a la luz de tu comentario: "${challenge}".
 
 En modo demo se mantiene la postura anterior sin cambios sustanciales; activa Live Mode para una reconsideracion real basada en IA.`;
+}
+
+// Evaluacion simulada de Discovery (v0.5): en modo demo no razona de
+// verdad sobre si falta informacion, solo ejemplifica el flujo para poder
+// probarlo sin ninguna API key configurada. Primera ronda: pide contexto
+// generico. A partir de la segunda: da por suficiente para no bloquear la
+// demo indefinidamente.
+export function generateDemoDiscovery(problem: string, round: number): DiscoveryAssessment {
+  if (round === 1) {
+    return {
+      sufficient: false,
+      reason: `${DEMO_TAG} La peticion "${problem}" es demasiado amplia para deliberar con fiabilidad.`,
+      missingInformation: ["Presupuesto disponible", "Uso previsto", "Plazo para decidir"],
+      questions: [
+        "Cual es tu presupuesto aproximado?",
+        "Para que lo vas a usar principalmente?",
+        "En cuanto tiempo necesitas tomar la decision?",
+      ],
+      completeness: 35,
+    };
+  }
+  return {
+    sufficient: true,
+    reason: `${DEMO_TAG} Informacion suficiente para deliberar.`,
+    missingInformation: [],
+    questions: [],
+    completeness: 90,
+  };
 }
 
 export function generateDemoMinutes(
