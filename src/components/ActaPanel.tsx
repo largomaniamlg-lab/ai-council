@@ -3,8 +3,13 @@
 import { useEffect, useState } from "react";
 import { getModeratorRole } from "@/config/councilRoles";
 import PendingCard from "@/components/PendingCard";
+import { VerdictBadge, TrendBadge } from "@/components/VerdictBadge";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import type { CouncilMinutes, PresidentDecision, SessionOutcome } from "@/lib/types";
+import { averageConfidence, confidenceTrend, type ConfidenceTrend } from "@/lib/confidenceParsing";
+import { MAX_DELIBERATION_ROUNDS } from "@/lib/orchestrator";
+import type { AgentResponse, CouncilMinutes, PresidentDecision, SessionOutcome } from "@/lib/types";
+
+type MinutesRound = CouncilMinutes & { markdown: string };
 
 function AdjournedStamp() {
   const { t } = useTranslation();
@@ -45,9 +50,89 @@ function Section({ title, items, noneLabel }: { title: string; items: string[]; 
   );
 }
 
+function computeTrendForRound(round: number, responses: AgentResponse[]): ConfidenceTrend | null {
+  const priorRounds = Array.from(
+    new Set(responses.filter((r) => r.round < round).map((r) => r.round))
+  ).sort((a, b) => b - a);
+  const priorRound = priorRounds[0];
+  if (priorRound === undefined) return null;
+
+  const thisRoundAvg = averageConfidence(
+    responses.filter((r) => r.round === round && typeof r.confidence === "number").map((r) => r.confidence!)
+  );
+  const priorRoundAvg = averageConfidence(
+    responses.filter((r) => r.round === priorRound && typeof r.confidence === "number").map((r) => r.confidence!)
+  );
+  return confidenceTrend(priorRoundAvg, thisRoundAvg);
+}
+
+function MinutesRoundBlock({
+  round,
+  responses,
+  t,
+}: {
+  round: MinutesRound;
+  responses: AgentResponse[];
+  t: (path: `acta.${string}`) => string;
+}) {
+  const trend = round.round > 1 && !round.isModeratorOnly ? computeTrendForRound(round.round, responses) : null;
+
+  return (
+    <div className="flex flex-col gap-3 border-t border-slate-200 pt-4 first:border-t-0 first:pt-0 dark:border-slate-700">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          {t("acta.roundHeading")} {round.round}
+        </span>
+        {round.isModeratorOnly && (
+          <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-950 dark:text-sky-400">
+            {t("acta.moderatorOnlyTag")}
+          </span>
+        )}
+        {round.verdict && <VerdictBadge verdict={round.verdict} />}
+        {trend && <TrendBadge trend={trend} />}
+      </div>
+
+      <AdjournedStamp />
+
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          {t("acta.summary")}
+        </h3>
+        <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
+          {round.summary || t("acta.noSummary")}
+        </p>
+      </div>
+
+      <Section title={t("acta.agreements")} items={round.agreements} noneLabel={t("acta.none")} />
+      <Section title={t("acta.disagreements")} items={round.disagreements} noneLabel={t("acta.none")} />
+      <Section title={t("acta.risks")} items={round.risks} noneLabel={t("acta.none")} />
+      <Section title={t("acta.openQuestions")} items={round.openQuestions} noneLabel={t("acta.none")} />
+
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          {t("acta.recommendation")}
+        </h3>
+        <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
+          {round.recommendation || t("acta.noRecommendation")}
+        </p>
+      </div>
+
+      {round.convergenceNote && (
+        <p className="text-sm italic text-slate-500 dark:text-slate-400">{round.convergenceNote}</p>
+      )}
+    </div>
+  );
+}
+
 export default function ActaPanel({
-  minutes,
+  minutesHistory,
+  responses,
   isGeneratingMinutes,
+  isChallenging,
+  isAskingModerator,
+  currentRound,
+  challengeError,
+  onChallenge,
   sessionId,
   supabaseConfigured,
   initialDecision,
@@ -55,8 +140,14 @@ export default function ActaPanel({
   onSaveDecision,
   onSaveOutcome,
 }: {
-  minutes: (CouncilMinutes & { markdown: string }) | null;
+  minutesHistory: MinutesRound[];
+  responses: AgentResponse[];
   isGeneratingMinutes: boolean;
+  isChallenging: boolean;
+  isAskingModerator: boolean;
+  currentRound: number;
+  challengeError: string | null;
+  onChallenge: (challenge: string, mode: "full" | "moderator") => void;
   sessionId: string | null;
   supabaseConfigured: boolean;
   initialDecision: PresidentDecision | null;
@@ -79,9 +170,14 @@ export default function ActaPanel({
   const [outcomeSaved, setOutcomeSaved] = useState(Boolean(initialOutcome));
   const [savingOutcome, setSavingOutcome] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [challengeText, setChallengeText] = useState("");
 
   const inputClass =
     "mb-2 w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100";
+
+  const latestMinutes = minutesHistory[minutesHistory.length - 1] ?? null;
+  const busy = isChallenging || isAskingModerator;
+  const roundCapReached = currentRound >= MAX_DELIBERATION_ROUNDS;
 
   async function handleSaveDecision() {
     if (!finalDecision.trim()) return;
@@ -104,23 +200,33 @@ export default function ActaPanel({
     }
   }
 
+  function combinedMarkdown(): string {
+    return minutesHistory.map((m) => m.markdown).join("\n\n---\n\n");
+  }
+
   function handleCopy() {
-    if (!minutes) return;
-    navigator.clipboard.writeText(minutes.markdown).then(() => {
+    if (!minutesHistory.length) return;
+    navigator.clipboard.writeText(combinedMarkdown()).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
   }
 
   function handleExport() {
-    if (!minutes) return;
-    const blob = new Blob([minutes.markdown], { type: "text/markdown" });
+    if (!minutesHistory.length) return;
+    const blob = new Blob([combinedMarkdown()], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = "acta-consejo.md";
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  function handleSubmitChallenge(mode: "full" | "moderator") {
+    if (!challengeText.trim() || busy) return;
+    onChallenge(challengeText.trim(), mode);
+    setChallengeText("");
   }
 
   return (
@@ -131,16 +237,14 @@ export default function ActaPanel({
 
       {isGeneratingMinutes && <PendingCard role={getModeratorRole()} />}
 
-      {!isGeneratingMinutes && !minutes && (
+      {!isGeneratingMinutes && minutesHistory.length === 0 && (
         <p className="text-sm text-slate-400 dark:text-slate-500">
           {t("acta.waitingForResponse")}
         </p>
       )}
 
-      {minutes && (
+      {minutesHistory.length > 0 && (
         <>
-          <AdjournedStamp />
-
           <div className="flex gap-2">
             <button
               onClick={handleCopy}
@@ -156,36 +260,54 @@ export default function ActaPanel({
             </button>
           </div>
 
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              {t("acta.summary")}
-            </h3>
-            <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
-              {minutes.summary || t("acta.noSummary")}
-            </p>
+          <div className="flex flex-col gap-4">
+            {minutesHistory.map((round, i) => (
+              <MinutesRoundBlock key={`${round.round}-${round.isModeratorOnly ? "mod" : "full"}-${i}`} round={round} responses={responses} t={t} />
+            ))}
           </div>
 
-          <Section title={t("acta.agreements")} items={minutes.agreements} noneLabel={t("acta.none")} />
-          <Section
-            title={t("acta.disagreements")}
-            items={minutes.disagreements}
-            noneLabel={t("acta.none")}
-          />
-          <Section title={t("acta.risks")} items={minutes.risks} noneLabel={t("acta.none")} />
-          <Section
-            title={t("acta.openQuestions")}
-            items={minutes.openQuestions}
-            noneLabel={t("acta.none")}
-          />
+          {isAskingModerator && <PendingCard role={getModeratorRole()} />}
 
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              {t("acta.recommendation")}
-            </h3>
-            <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
-              {minutes.recommendation || t("acta.noRecommendation")}
-            </p>
-          </div>
+          <hr className="border-slate-200 dark:border-slate-700" />
+
+          {latestMinutes && (
+            <div className="flex flex-col gap-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                {t("acta.challengeSectionTitle")}
+              </h3>
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                {t("acta.roundHeading")} {currentRound} {t("acta.roundOfLabel")} {MAX_DELIBERATION_ROUNDS}
+              </span>
+              <textarea
+                value={challengeText}
+                onChange={(e) => setChallengeText(e.target.value)}
+                placeholder={t("acta.challengePlaceholder")}
+                rows={3}
+                disabled={busy}
+                className={inputClass}
+              />
+              {challengeError && (
+                <p className="text-sm text-red-600 dark:text-red-400">{challengeError}</p>
+              )}
+              {roundCapReached && (
+                <p className="text-sm text-amber-700 dark:text-amber-400">{t("acta.maxRoundsReached")}</p>
+              )}
+              <button
+                onClick={() => handleSubmitChallenge("full")}
+                disabled={!challengeText.trim() || busy || roundCapReached}
+                className="w-full rounded-md bg-slate-900 py-2 text-sm font-semibold text-white disabled:opacity-40 dark:bg-slate-100 dark:text-slate-900"
+              >
+                {isChallenging ? t("acta.challenging") : t("acta.challengeButton")}
+              </button>
+              <button
+                onClick={() => handleSubmitChallenge("moderator")}
+                disabled={!challengeText.trim() || busy}
+                className="w-full rounded-md border border-slate-300 py-2 text-sm font-medium text-slate-700 hover:border-slate-400 disabled:opacity-40 dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500"
+              >
+                {isAskingModerator ? t("acta.askingModerator") : t("acta.askModeratorButton")}
+              </button>
+            </div>
+          )}
 
           <hr className="border-slate-200 dark:border-slate-700" />
 

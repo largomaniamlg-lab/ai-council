@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateCouncilMinutes } from "@/lib/minutes";
-import { saveMinutes, isSupabaseConfigured } from "@/lib/data";
+import { saveMinutesRound, isSupabaseConfigured } from "@/lib/data";
 import type { AgentResponse } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
   if (sessionId && isSupabaseConfigured()) {
     try {
-      await saveMinutes(sessionId, minutes, markdown);
+      await saveMinutesRound(sessionId, minutes, markdown);
     } catch (err) {
       console.error("Error guardando el acta en Supabase:", err);
     }

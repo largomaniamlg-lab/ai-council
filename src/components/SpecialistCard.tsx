@@ -56,6 +56,17 @@ export default function SpecialistCard({ response }: { response: AgentResponse }
           {!response.error && typeof response.confidence === "number" && (
             <ConfidenceBadge confidence={response.confidence} />
           )}
+          {!response.error && response.stance && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                response.stance === "revise"
+                  ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+              }`}
+            >
+              {response.stance === "revise" ? t("acta.stanceRevise") : t("acta.stanceMaintain")}
+            </span>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
           {typeof response.elapsedMs === "number" && <span>{formatElapsed(response.elapsedMs)}</span>}

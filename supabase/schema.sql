@@ -30,21 +30,34 @@ create table if not exists agent_responses (
   response text,
   error text,
   confidence numeric,
+  stance text check (stance in ('maintain', 'revise')),
   created_at timestamptz not null default now()
 );
 
 create table if not exists council_minutes (
   id uuid primary key default uuid_generate_v4(),
   session_id uuid not null references sessions(id) on delete cascade,
+  round int not null default 1,
+  is_moderator_only boolean not null default false,
   summary text,
   agreements jsonb not null default '[]',
   disagreements jsonb not null default '[]',
   risks jsonb not null default '[]',
   open_questions jsonb not null default '[]',
   recommendation text,
+  verdict text check (verdict in ('maintained', 'revised', 'mixed')),
+  convergence_note text,
   markdown text,
   created_at timestamptz not null default now()
 );
+
+-- Migracion v0.4 (Deliberative Council): si ya tenias el schema creado antes
+-- de estas columnas, ejecuta este bloque para anadirlas sin perder datos.
+alter table agent_responses add column if not exists stance text check (stance in ('maintain', 'revise'));
+alter table council_minutes add column if not exists round int not null default 1;
+alter table council_minutes add column if not exists is_moderator_only boolean not null default false;
+alter table council_minutes add column if not exists verdict text check (verdict in ('maintained', 'revised', 'mixed'));
+alter table council_minutes add column if not exists convergence_note text;
 
 create table if not exists president_decisions (
   id uuid primary key default uuid_generate_v4(),

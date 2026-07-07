@@ -104,7 +104,24 @@ export function getDemoConfidence(role: CouncilRole): number {
   return DEMO_CONFIDENCE[role.id] ?? 65;
 }
 
-export function generateDemoMinutes(problem: string): CouncilMinutes {
+// Respuesta simulada para una ronda de deliberacion (Challenge the
+// Council) en modo demo: no razona de verdad sobre el challenge, solo
+// mantiene el flujo de la app operativo sin ninguna API key configurada.
+export function generateDemoChallengeResponse(
+  role: CouncilRole,
+  problem: string,
+  challenge: string
+): string {
+  return `${DEMO_TAG}
+
+${role.name} reconsidera "${problem}" a la luz de tu comentario: "${challenge}".
+
+En modo demo se mantiene la postura anterior sin cambios sustanciales; activa Live Mode para una reconsideracion real basada en IA.`;
+}
+
+export function generateDemoMinutes(
+  problem: string
+): Omit<CouncilMinutes, "round" | "isModeratorOnly" | "verdict" | "convergenceNote"> {
   return {
     summary: `${DEMO_TAG} El Consejo analizo: "${problem}" en modo simulacion, sin llamadas reales a IA.`,
     agreements: ["Conviene validar la idea con datos reales antes de invertir mas recursos."],

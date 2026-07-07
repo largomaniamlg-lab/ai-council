@@ -97,6 +97,24 @@ export interface Dictionary {
     lessonsPlaceholder: string;
     saveOutcome: string;
     outcomeSaved: string;
+    roundHeading: string;
+    roundOfLabel: string;
+    verdictMaintained: string;
+    verdictRevised: string;
+    verdictMixed: string;
+    stanceMaintain: string;
+    stanceRevise: string;
+    trendUp: string;
+    trendDown: string;
+    trendStable: string;
+    challengeSectionTitle: string;
+    challengePlaceholder: string;
+    challengeButton: string;
+    challenging: string;
+    askModeratorButton: string;
+    askingModerator: string;
+    maxRoundsReached: string;
+    moderatorOnlyTag: string;
   };
   settings: {
     title: string;

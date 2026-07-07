@@ -1,15 +1,26 @@
 import {
+  getRoleById,
   type CouncilMode,
   type CouncilRole,
   resolveRolesForMode,
 } from "@/config/councilRoles";
 import { getProvider } from "@/lib/aiProviders";
-import { generateDemoResponse, getDemoConfidence } from "@/lib/demoContent";
+import { generateDemoChallengeResponse, generateDemoResponse, getDemoConfidence } from "@/lib/demoContent";
 import { SIMULATOR_PROVIDER, SIMULATOR_MODEL } from "@/lib/simulatorEngine";
 import { getLanguageInstruction } from "@/lib/promptLocale";
-import { CONFIDENCE_INSTRUCTION, extractConfidence } from "@/lib/confidenceParsing";
+import {
+  CONFIDENCE_INSTRUCTION,
+  STANCE_INSTRUCTION,
+  extractConfidence,
+  extractStance,
+} from "@/lib/confidenceParsing";
 import type { Locale } from "@/lib/i18n";
-import type { AgentResponse, OrchestratorResult } from "@/lib/types";
+import type { AgentResponse, CouncilMinutes, OrchestratorResult } from "@/lib/types";
+
+// Numero maximo de rondas de deliberacion (Challenge the Council) por
+// sesion, contando la ronda inicial. Limite deliberado para controlar
+// tiempo/coste: el modo Debate ya consume 2 de estas 4 rondas el solo.
+export const MAX_DELIBERATION_ROUNDS = 4;
 
 export interface RunCouncilInput {
   problem: string;
@@ -137,4 +148,125 @@ export async function runCouncil({
     roles: roles.map((r) => r.id),
     responses: [...round1, ...round2],
   };
+}
+
+// Ronda de deliberacion: el especialista reconsidera su ultimo informe a la
+// luz del challenge del Presidente y del acta previa, y declara si mantiene
+// o revisa su postura (STANCE).
+async function callSpecialistChallenge(
+  role: CouncilRole,
+  problem: string,
+  round: number,
+  useDemoMode: boolean,
+  locale: Locale | undefined,
+  ownPriorResponse: AgentResponse | undefined,
+  latestMinutes: CouncilMinutes,
+  challenge: string
+): Promise<AgentResponse> {
+  const userPrompt = `Decision o problema planteado por el Presidente:\n${problem}\n\nTu informe anterior (ronda ${
+    ownPriorResponse?.round ?? round - 1
+  }):\n${ownPriorResponse?.response ?? "(sin informe previo)"}\n\nActa del Consejo tras esa ronda:\nResumen: ${
+    latestMinutes.summary
+  }\nRecomendacion: ${latestMinutes.recommendation}\n\nEl Presidente desafia al Consejo con lo siguiente:\n"${challenge}"\n\nReconsidera tu analisis a la luz de esto, manteniendo tu rol.\n\n${STANCE_INSTRUCTION}\n\n${getLanguageInstruction(
+    locale
+  )}\n\n${CONFIDENCE_INSTRUCTION}`;
+
+  const providerId = useDemoMode ? SIMULATOR_PROVIDER : role.provider;
+  const model = useDemoMode ? SIMULATOR_MODEL : role.model;
+
+  const base: Omit<AgentResponse, "response" | "error" | "confidence" | "elapsedMs" | "stance"> = {
+    roleId: role.id,
+    roleName: role.name,
+    provider: providerId,
+    model,
+    round,
+    prompt: userPrompt,
+  };
+
+  const provider = getProvider(providerId);
+  const startedAt = Date.now();
+
+  if (!provider.isConfigured()) {
+    if (useDemoMode) {
+      return {
+        ...base,
+        response: generateDemoChallengeResponse(role, problem, challenge),
+        confidence: getDemoConfidence(role),
+        stance: "maintain",
+        elapsedMs: Date.now() - startedAt,
+      };
+    }
+    return {
+      ...base,
+      response: "",
+      error: `El proveedor "${providerId}" no esta configurado. Anade su API key en las variables de entorno.`,
+      elapsedMs: Date.now() - startedAt,
+    };
+  }
+
+  try {
+    const result = await provider.generate({
+      model,
+      systemPrompt: role.basePrompt,
+      userPrompt,
+    });
+    const elapsedMs = Date.now() - startedAt;
+    const { text: withoutConfidence, confidence } = extractConfidence(result.text);
+    const { text, stance } = extractStance(withoutConfidence);
+    return { ...base, response: text, confidence, stance, elapsedMs };
+  } catch (err) {
+    return {
+      ...base,
+      response: "",
+      error: err instanceof Error ? err.message : "Error desconocido al consultar al especialista.",
+      elapsedMs: Date.now() - startedAt,
+    };
+  }
+}
+
+export interface ContinueDeliberationInput {
+  problem: string;
+  roleIds: string[];
+  history: AgentResponse[];
+  latestMinutes: CouncilMinutes;
+  challenge: string;
+  nextRound: number;
+  useDemoMode?: boolean;
+  locale?: Locale;
+}
+
+// "Challenge the Council" (Modo A, re-deliberacion completa): vuelve a
+// convocar a los mismos especialistas de la sesion para que reconsideren su
+// ultimo informe frente al challenge del Presidente.
+export async function continueDeliberation({
+  problem,
+  roleIds,
+  history,
+  latestMinutes,
+  challenge,
+  nextRound,
+  useDemoMode = false,
+  locale,
+}: ContinueDeliberationInput): Promise<AgentResponse[]> {
+  const roles = roleIds.map((id) => getRoleById(id)).filter((r): r is CouncilRole => Boolean(r));
+
+  if (roles.length === 0) {
+    throw new Error("No se ha encontrado ningun especialista de la sesion original.");
+  }
+
+  return Promise.all(
+    roles.map((role) => {
+      const ownPrior = [...history].reverse().find((r) => r.roleId === role.id);
+      return callSpecialistChallenge(
+        role,
+        problem,
+        nextRound,
+        useDemoMode,
+        locale,
+        ownPrior,
+        latestMinutes,
+        challenge
+      );
+    })
+  );
 }

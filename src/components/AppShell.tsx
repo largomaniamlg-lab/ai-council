@@ -27,6 +27,10 @@ interface MinutesState extends CouncilMinutes {
   markdown: string;
 }
 
+function maxRound(responses: AgentResponse[]): number {
+  return responses.length ? Math.max(...responses.map((r) => r.round)) : 1;
+}
+
 export default function AppShell({
   initialProjects,
   supabaseConfigured,
@@ -53,12 +57,15 @@ export default function AppShell({
   const [isGeneratingMinutes, setIsGeneratingMinutes] = useState(false);
   const [currentProblem, setCurrentProblem] = useState<string | null>(null);
   const [responses, setResponses] = useState<AgentResponse[]>([]);
-  const [minutes, setMinutes] = useState<MinutesState | null>(null);
+  const [minutesHistory, setMinutesHistory] = useState<MinutesState[]>([]);
   const [decision, setDecision] = useState<PresidentDecision | null>(null);
   const [outcome, setOutcome] = useState<SessionOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingRoles, setPendingRoles] = useState<CouncilRole[]>([]);
+  const [isChallenging, setIsChallenging] = useState(false);
+  const [isAskingModerator, setIsAskingModerator] = useState(false);
+  const [challengeError, setChallengeError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,15 +111,17 @@ export default function AppShell({
     setCurrentProblem(null);
     setResponses([]);
     setPendingRoles([]);
-    setMinutes(null);
+    setMinutesHistory([]);
     setDecision(null);
     setOutcome(null);
     setError(null);
+    setChallengeError(null);
   }
 
   async function handleSelectSession(sessionId: string) {
     setSelectedSessionId(sessionId);
     setError(null);
+    setChallengeError(null);
     setPendingRoles([]);
     const res = await fetch(`/api/sessions/${sessionId}`);
     const data = await res.json();
@@ -122,7 +131,7 @@ export default function AppShell({
     }
     setCurrentProblem(data.session.problem);
     setResponses(data.responses ?? []);
-    setMinutes(data.minutes ?? null);
+    setMinutesHistory(data.minutesHistory ?? []);
     setDecision(data.decision ?? null);
     setOutcome(data.outcome ?? null);
   }
@@ -155,8 +164,9 @@ export default function AppShell({
   async function handleConsult() {
     if (!problem.trim()) return;
     setError(null);
+    setChallengeError(null);
     setIsConsulting(true);
-    setMinutes(null);
+    setMinutesHistory([]);
     setDecision(null);
     setOutcome(null);
     setSelectedSessionId(null);
@@ -215,7 +225,7 @@ export default function AppShell({
       });
       const minutesData = await minutesRes.json();
       if (minutesRes.ok) {
-        setMinutes({ ...minutesData.minutes, markdown: minutesData.markdown });
+        setMinutesHistory([{ ...minutesData.minutes, markdown: minutesData.markdown }]);
       } else {
         setError(minutesData.error ?? t("errors.minutesFailed"));
       }
@@ -225,6 +235,87 @@ export default function AppShell({
       setIsConsulting(false);
       setIsGeneratingMinutes(false);
       setPendingRoles([]);
+    }
+  }
+
+  // "Challenge the Council": modo A (re-deliberacion completa, vuelve a
+  // convocar a los mismos especialistas) o modo B (quick follow-up solo al
+  // Moderador, sin convocar a nadie). Ver AI Council v0.4 (Deliberative
+  // Council) para el diseno completo.
+  async function handleChallenge(challenge: string, mode: "full" | "moderator") {
+    if (!currentProblem || minutesHistory.length === 0) return;
+    const latestMinutes = minutesHistory[minutesHistory.length - 1];
+    const sessionRoleIds = Array.from(new Set(responses.map((r) => r.roleId)));
+    const round = maxRound(responses);
+    const nextRound = round + 1;
+
+    setChallengeError(null);
+
+    if (mode === "full") {
+      setIsChallenging(true);
+      setPendingRoles(
+        sessionRoleIds.map((id) => getRoleById(id)).filter((r): r is CouncilRole => Boolean(r))
+      );
+      try {
+        const res = await fetch("/api/council/challenge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: selectedSessionId,
+            problem: currentProblem,
+            roleIds: sessionRoleIds,
+            history: responses,
+            latestMinutes,
+            challenge,
+            challengeMode: "full",
+            nextRound,
+            useDemoMode,
+            locale,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setChallengeError(data.error ?? t("errors.consultFailed"));
+          return;
+        }
+        await revealResponsesSequentially(data.responses ?? []);
+        setMinutesHistory((prev) => [...prev, { ...data.minutes, markdown: data.markdown }]);
+      } catch (err) {
+        setChallengeError(err instanceof Error ? err.message : t("errors.unexpected"));
+      } finally {
+        setIsChallenging(false);
+        setPendingRoles([]);
+      }
+    } else {
+      setIsAskingModerator(true);
+      try {
+        const res = await fetch("/api/council/challenge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: selectedSessionId,
+            problem: currentProblem,
+            roleIds: sessionRoleIds,
+            history: responses,
+            latestMinutes,
+            challenge,
+            challengeMode: "moderator",
+            nextRound,
+            useDemoMode,
+            locale,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setChallengeError(data.error ?? t("errors.minutesFailed"));
+          return;
+        }
+        setMinutesHistory((prev) => [...prev, { ...data.minutes, markdown: data.markdown }]);
+      } catch (err) {
+        setChallengeError(err instanceof Error ? err.message : t("errors.unexpected"));
+      } finally {
+        setIsAskingModerator(false);
+      }
     }
   }
 
@@ -396,8 +487,14 @@ export default function AppShell({
           <div className="md:hidden">
             <ActaPanel
               key={`${selectedSessionId ?? "draft"}-mobile`}
-              minutes={minutes}
+              minutesHistory={minutesHistory}
+              responses={responses}
               isGeneratingMinutes={isGeneratingMinutes}
+              isChallenging={isChallenging}
+              isAskingModerator={isAskingModerator}
+              currentRound={maxRound(responses)}
+              challengeError={challengeError}
+              onChallenge={handleChallenge}
               sessionId={selectedSessionId}
               supabaseConfigured={supabaseConfigured}
               initialDecision={decision}
@@ -412,8 +509,14 @@ export default function AppShell({
       <div className="hidden md:block">
         <ActaPanel
           key={`${selectedSessionId ?? "draft"}-desktop`}
-          minutes={minutes}
+          minutesHistory={minutesHistory}
+          responses={responses}
           isGeneratingMinutes={isGeneratingMinutes}
+          isChallenging={isChallenging}
+          isAskingModerator={isAskingModerator}
+          currentRound={maxRound(responses)}
+          challengeError={challengeError}
+          onChallenge={handleChallenge}
           sessionId={selectedSessionId}
           supabaseConfigured={supabaseConfigured}
           initialDecision={decision}

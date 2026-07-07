@@ -26,7 +26,7 @@ export interface Session {
 export interface SessionDetail {
   session: Session;
   responses: AgentResponse[];
-  minutes: (CouncilMinutes & { markdown: string }) | null;
+  minutesHistory: (CouncilMinutes & { markdown: string })[];
   decision: PresidentDecision | null;
   outcome: SessionOutcome | null;
 }
@@ -114,13 +114,15 @@ export async function saveAgentResponses(
     prompt: r.prompt,
     response: r.response,
     error: r.error ?? null,
+    confidence: r.confidence ?? null,
+    stance: r.stance ?? null,
   }));
 
   const { error } = await supabase.from("agent_responses").insert(rows);
   if (error) throw new Error(error.message);
 }
 
-export async function saveMinutes(
+export async function saveMinutesRound(
   sessionId: string,
   minutes: CouncilMinutes,
   markdown: string
@@ -130,12 +132,16 @@ export async function saveMinutes(
 
   const { error } = await supabase.from("council_minutes").insert({
     session_id: sessionId,
+    round: minutes.round,
+    is_moderator_only: minutes.isModeratorOnly ?? false,
     summary: minutes.summary,
     agreements: minutes.agreements,
     disagreements: minutes.disagreements,
     risks: minutes.risks,
     open_questions: minutes.openQuestions,
     recommendation: minutes.recommendation,
+    verdict: minutes.verdict ?? null,
+    convergence_note: minutes.convergenceNote ?? null,
     markdown,
   });
 
@@ -182,14 +188,13 @@ export async function getSessionDetail(sessionId: string): Promise<SessionDetail
     await Promise.all([
       supabase.from("sessions").select("*").eq("id", sessionId).single(),
       supabase.from("agent_responses").select("*").eq("session_id", sessionId).order("round"),
-      supabase.from("council_minutes").select("*").eq("session_id", sessionId).order("created_at", { ascending: false }).limit(1),
+      supabase.from("council_minutes").select("*").eq("session_id", sessionId).order("round", { ascending: true }).order("created_at", { ascending: true }),
       supabase.from("president_decisions").select("*").eq("session_id", sessionId).order("created_at", { ascending: false }).limit(1),
       supabase.from("outcomes").select("*").eq("session_id", sessionId).order("created_at", { ascending: false }).limit(1),
     ]);
 
   if (sessionError || !session) return null;
 
-  const minutesRow = minutesRows?.[0];
   const decisionRow = decisionRows?.[0];
   const outcomeRow = outcomeRows?.[0];
 
@@ -204,18 +209,22 @@ export async function getSessionDetail(sessionId: string): Promise<SessionDetail
       prompt: r.prompt,
       response: r.response ?? "",
       error: r.error ?? undefined,
+      confidence: r.confidence ?? undefined,
+      stance: r.stance ?? undefined,
     })),
-    minutes: minutesRow
-      ? {
-          summary: minutesRow.summary,
-          agreements: minutesRow.agreements ?? [],
-          disagreements: minutesRow.disagreements ?? [],
-          risks: minutesRow.risks ?? [],
-          openQuestions: minutesRow.open_questions ?? [],
-          recommendation: minutesRow.recommendation,
-          markdown: minutesRow.markdown,
-        }
-      : null,
+    minutesHistory: (minutesRows ?? []).map((m) => ({
+      round: m.round ?? 1,
+      isModeratorOnly: m.is_moderator_only ?? false,
+      summary: m.summary,
+      agreements: m.agreements ?? [],
+      disagreements: m.disagreements ?? [],
+      risks: m.risks ?? [],
+      openQuestions: m.open_questions ?? [],
+      recommendation: m.recommendation,
+      verdict: m.verdict ?? undefined,
+      convergenceNote: m.convergence_note ?? undefined,
+      markdown: m.markdown,
+    })),
     decision: decisionRow
       ? {
           finalDecision: decisionRow.final_decision,
