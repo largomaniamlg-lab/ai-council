@@ -2,6 +2,7 @@ import { isSupabaseConfigured, getSupabaseServerClient } from "@/lib/supabase/se
 import type {
   AgentResponse,
   CouncilMinutes,
+  DiscoveryQA,
   PresidentDecision,
   SessionOutcome,
 } from "@/lib/types";
@@ -20,6 +21,8 @@ export interface Session {
   title: string;
   problem: string;
   mode: CouncilMode;
+  locale: string | null;
+  discovery_history: DiscoveryQA[];
   created_at: string;
 }
 
@@ -29,6 +32,23 @@ export interface SessionDetail {
   minutesHistory: (CouncilMinutes & { markdown: string })[];
   decision: PresidentDecision | null;
   outcome: SessionOutcome | null;
+  discoveryHistory: DiscoveryQA[];
+}
+
+// v0.5.1 Session History: resumen ligero de una sesion para listar en la
+// pagina de historial sin tener que cargar todo el detalle.
+export interface HistorySessionSummary {
+  id: string;
+  projectId: string;
+  projectName: string | null;
+  title: string;
+  problem: string;
+  mode: CouncilMode;
+  locale: string | null;
+  rounds: number;
+  finalRecommendation: string;
+  status: "in_progress" | "completed" | "decision_saved";
+  createdAt: string;
 }
 
 export { isSupabaseConfigured };
@@ -79,6 +99,8 @@ export async function createSession(input: {
   title: string;
   problem: string;
   mode: CouncilMode;
+  locale?: string;
+  discoveryHistory?: DiscoveryQA[];
 }): Promise<Session | null> {
   const supabase = getSupabaseServerClient();
   if (!supabase) return null;
@@ -90,12 +112,22 @@ export async function createSession(input: {
       title: input.title,
       problem: input.problem,
       mode: input.mode,
+      locale: input.locale ?? null,
+      discovery_history: input.discoveryHistory ?? [],
     })
     .select("*")
     .single();
 
   if (error) throw new Error(error.message);
   return data;
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  const supabase = getSupabaseServerClient();
+  if (!supabase) return;
+
+  const { error } = await supabase.from("sessions").delete().eq("id", sessionId);
+  if (error) throw new Error(error.message);
 }
 
 export async function saveAgentResponses(
@@ -240,5 +272,57 @@ export async function getSessionDetail(sessionId: string): Promise<SessionDetail
           lessons: outcomeRow.lessons,
         }
       : null,
+    discoveryHistory: session.discovery_history ?? [],
   };
+}
+
+// v0.5.1 Session History: lista todas las sesiones (de cualquier proyecto)
+// con un resumen ligero, para la pagina /history. No trae los informes ni
+// las actas completas, solo lo necesario para listar/filtrar/buscar.
+export async function listAllSessionsSummary(): Promise<HistorySessionSummary[]> {
+  const supabase = getSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data: sessions, error } = await supabase
+    .from("sessions")
+    .select("*, projects(name)")
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  if (!sessions || sessions.length === 0) return [];
+
+  const ids = sessions.map((s) => s.id);
+  const [{ data: minutesRows }, { data: decisionRows }] = await Promise.all([
+    supabase
+      .from("council_minutes")
+      .select("session_id, round, recommendation")
+      .in("session_id", ids),
+    supabase.from("president_decisions").select("session_id").in("session_id", ids),
+  ]);
+
+  const decidedIds = new Set((decisionRows ?? []).map((d) => d.session_id));
+  const latestBySession = new Map<string, { round: number; recommendation: string }>();
+  for (const m of minutesRows ?? []) {
+    const existing = latestBySession.get(m.session_id);
+    if (!existing || m.round > existing.round) {
+      latestBySession.set(m.session_id, { round: m.round, recommendation: m.recommendation ?? "" });
+    }
+  }
+
+  return sessions.map((s) => {
+    const latest = latestBySession.get(s.id);
+    return {
+      id: s.id,
+      projectId: s.project_id,
+      projectName: (s as { projects?: { name: string } | null }).projects?.name ?? null,
+      title: s.title,
+      problem: s.problem,
+      mode: s.mode,
+      locale: s.locale ?? null,
+      rounds: latest?.round ?? 0,
+      finalRecommendation: latest?.recommendation ?? "",
+      status: decidedIds.has(s.id) ? "decision_saved" : latest ? "completed" : "in_progress",
+      createdAt: s.created_at,
+    };
+  });
 }

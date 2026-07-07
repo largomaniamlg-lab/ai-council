@@ -16,6 +16,8 @@ create table if not exists sessions (
   title text not null,
   problem text not null,
   mode text not null check (mode in ('rapido', 'completo', 'debate', 'experto')),
+  locale text,
+  discovery_history jsonb not null default '[]',
   created_at timestamptz not null default now()
 );
 
@@ -58,6 +60,11 @@ alter table council_minutes add column if not exists round int not null default 
 alter table council_minutes add column if not exists is_moderator_only boolean not null default false;
 alter table council_minutes add column if not exists verdict text check (verdict in ('maintained', 'revised', 'mixed'));
 alter table council_minutes add column if not exists convergence_note text;
+
+-- Migracion v0.5.1 (Session History): idem, anade estas columnas si el
+-- schema ya existia sin ellas.
+alter table sessions add column if not exists locale text;
+alter table sessions add column if not exists discovery_history jsonb not null default '[]';
 
 create table if not exists president_decisions (
   id uuid primary key default uuid_generate_v4(),

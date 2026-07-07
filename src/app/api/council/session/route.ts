@@ -3,6 +3,7 @@ import { runCouncil } from "@/lib/orchestrator";
 import { createSession, saveAgentResponses, isSupabaseConfigured } from "@/lib/data";
 import type { CouncilMode } from "@/config/councilRoles";
 import type { Locale } from "@/lib/i18n";
+import type { DiscoveryQA } from "@/lib/types";
 
 // El Council Simulator (modelo gratuito) puede tardar 15-90s por
 // especialista. El limite por defecto de Vercel (Hobby, Fluid Compute) es
@@ -17,6 +18,7 @@ interface RequestBody {
   manualRoleIds?: string[];
   useDemoMode?: boolean;
   locale?: Locale;
+  discoveryHistory?: DiscoveryQA[];
 }
 
 export async function POST(request: Request) {
@@ -27,7 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "JSON invalido en la peticion." }, { status: 400 });
   }
 
-  const { projectId, title, problem, mode, manualRoleIds, useDemoMode, locale } = body;
+  const { projectId, title, problem, mode, manualRoleIds, useDemoMode, locale, discoveryHistory } = body;
 
   if (!problem || !problem.trim()) {
     return NextResponse.json({ error: "El problema o decision no puede estar vacio." }, { status: 400 });
@@ -46,6 +48,8 @@ export async function POST(request: Request) {
         title: title?.trim() || problem.slice(0, 80),
         problem,
         mode,
+        locale,
+        discoveryHistory,
       });
       if (session) {
         sessionId = session.id;

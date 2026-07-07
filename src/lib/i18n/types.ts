@@ -39,6 +39,7 @@ export interface Dictionary {
     historyLabel: string;
     noSessions: string;
     settingsLink: string;
+    historyLink: string;
   };
   form: {
     problemLabel: string;
@@ -156,5 +157,28 @@ export interface Dictionary {
     answerPlaceholder: string;
     continueButton: string;
     continuing: string;
+  };
+  history: {
+    title: string;
+    backToConsole: string;
+    searchPlaceholder: string;
+    filterProjectLabel: string;
+    filterModeLabel: string;
+    filterLocaleLabel: string;
+    allProjects: string;
+    allModes: string;
+    allLocales: string;
+    noSessions: string;
+    noSupabaseHint: string;
+    statusInProgress: string;
+    statusCompleted: string;
+    statusDecisionSaved: string;
+    openButton: string;
+    deleteButton: string;
+    deleteConfirm: string;
+    exportButton: string;
+    roundsLabel: string;
+    createdLabel: string;
+    noRecommendationYet: string;
   };
 }

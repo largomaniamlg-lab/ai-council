@@ -13,7 +13,8 @@ type LeafSection =
   | "acta"
   | "settings"
   | "errors"
-  | "discovery";
+  | "discovery"
+  | "history";
 
 function getPath(dict: Dictionary, path: string): unknown {
   return path.split(".").reduce<unknown>((acc, key) => {

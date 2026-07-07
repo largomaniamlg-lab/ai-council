@@ -154,8 +154,14 @@ export default function Sidebar({
       )}
 
       <Link
-        href="/settings"
+        href="/history"
         className="mt-4 flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:border-slate-300 dark:border-slate-800 dark:text-slate-300 dark:hover:border-slate-700"
+      >
+        &#128337; {t("sidebar.historyLink")}
+      </Link>
+      <Link
+        href="/settings"
+        className="mt-2 flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:border-slate-300 dark:border-slate-800 dark:text-slate-300 dark:hover:border-slate-700"
       >
         &#9881; {t("sidebar.settingsLink")}
       </Link>

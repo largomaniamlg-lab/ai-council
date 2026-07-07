@@ -9,6 +9,7 @@ import PendingCard from "@/components/PendingCard";
 import ActaPanel from "@/components/ActaPanel";
 import DiscoveryPanel from "@/components/DiscoveryPanel";
 import type { Project, Session } from "@/lib/data";
+import { getLocalSession, saveLocalSession } from "@/lib/localHistory";
 import {
   getRoleById,
   resolveRolesForMode,
@@ -79,6 +80,10 @@ export default function AppShell({
   const [discoveryHistory, setDiscoveryHistory] = useState<DiscoveryQA[]>([]);
   const [discoveryAssessment, setDiscoveryAssessment] = useState<DiscoveryAssessment | null>(null);
 
+  // v0.5.1 Session History: cuando Supabase no esta configurado, la sesion
+  // se guarda igualmente, pero en localStorage (ver src/lib/localHistory.ts).
+  const [localSessionId, setLocalSessionId] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -101,6 +106,102 @@ export default function AppShell({
       cancelled = true;
     };
   }, [selectedProjectId, supabaseConfigured]);
+
+  // v0.5.1 Session History (fallback local): mientras la sesion avanza
+  // (Discovery, rondas, decision...), se refleja en localStorage si
+  // Supabase no esta configurado, para que /history pueda listarla.
+  useEffect(() => {
+    if (supabaseConfigured || !localSessionId || !currentProblem) return;
+    const existing = getLocalSession(localSessionId);
+    saveLocalSession({
+      id: localSessionId,
+      title: currentProblem.slice(0, 80),
+      problem: currentProblem,
+      mode,
+      locale,
+      discoveryHistory,
+      responses,
+      minutesHistory,
+      decision,
+      outcome,
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  }, [
+    supabaseConfigured,
+    localSessionId,
+    currentProblem,
+    mode,
+    locale,
+    discoveryHistory,
+    responses,
+    minutesHistory,
+    decision,
+    outcome,
+  ]);
+
+  function hydrateFromDetail(
+    detail: {
+      session: { problem: string; mode: CouncilMode };
+      responses: AgentResponse[];
+      minutesHistory: MinutesState[];
+      decision: PresidentDecision | null;
+      outcome: SessionOutcome | null;
+      discoveryHistory: DiscoveryQA[];
+    },
+    sessionId: string,
+    projectId?: string | null
+  ) {
+    setSelectedSessionId(sessionId);
+    if (projectId) setSelectedProjectId(projectId);
+    setCurrentProblem(detail.session.problem);
+    setMode(detail.session.mode);
+    setResponses(detail.responses ?? []);
+    setMinutesHistory(detail.minutesHistory ?? []);
+    setDecision(detail.decision ?? null);
+    setOutcome(detail.outcome ?? null);
+    setDiscoveryHistory(detail.discoveryHistory ?? []);
+    setDiscoveryStatus("idle");
+    setDiscoveryAssessment(null);
+    setPendingRoles([]);
+    setError(null);
+    setChallengeError(null);
+  }
+
+  // v0.5.1 Session History: al llegar desde /history con ?openSession=<id>,
+  // se abre esa sesion (desde Supabase o desde localStorage segun el caso).
+  useEffect(() => {
+    const openSessionId = new URLSearchParams(window.location.search).get("openSession");
+    if (!openSessionId) return;
+
+    async function openSession() {
+      if (supabaseConfigured) {
+        const res = await fetch(`/api/sessions/${openSessionId}`);
+        const data = await res.json();
+        if (!data.error) hydrateFromDetail(data, openSessionId!, data.session.project_id);
+      } else {
+        const local = getLocalSession(openSessionId!);
+        if (local) {
+          setLocalSessionId(local.id);
+          hydrateFromDetail(
+            {
+              session: { problem: local.problem, mode: local.mode },
+              responses: local.responses,
+              minutesHistory: local.minutesHistory,
+              decision: local.decision,
+              outcome: local.outcome,
+              discoveryHistory: local.discoveryHistory,
+            },
+            local.id,
+            null
+          );
+        }
+      }
+      window.history.replaceState({}, "", "/");
+    }
+
+    openSession();
+  }, [supabaseConfigured]);
 
   async function handleCreateProject(name: string) {
     const res = await fetch("/api/projects", {
@@ -131,10 +232,10 @@ export default function AppShell({
     setDiscoveryStatus("idle");
     setDiscoveryHistory([]);
     setDiscoveryAssessment(null);
+    setLocalSessionId(null);
   }
 
   async function handleSelectSession(sessionId: string) {
-    setSelectedSessionId(sessionId);
     setError(null);
     setChallengeError(null);
     setPendingRoles([]);
@@ -144,11 +245,7 @@ export default function AppShell({
       setError(data.error);
       return;
     }
-    setCurrentProblem(data.session.problem);
-    setResponses(data.responses ?? []);
-    setMinutesHistory(data.minutesHistory ?? []);
-    setDecision(data.decision ?? null);
-    setOutcome(data.outcome ?? null);
+    hydrateFromDetail(data, sessionId, data.session.project_id);
   }
 
   function sleep(ms: number) {
@@ -198,11 +295,15 @@ export default function AppShell({
     return data.assessment as DiscoveryAssessment;
   }
 
-  async function runFullConsultation(enrichedProblem: string) {
+  async function runFullConsultation(enrichedProblem: string, finalDiscoveryHistory: DiscoveryQA[]) {
     setIsConsulting(true);
     setSelectedSessionId(null);
     setResponses([]);
     setPendingRoles(resolveRolesForMode(mode, mode === "experto" ? manualRoleIds : undefined));
+
+    if (!supabaseConfigured) {
+      setLocalSessionId(crypto.randomUUID());
+    }
 
     try {
       const sessionRes = await fetch("/api/council/session", {
@@ -216,6 +317,7 @@ export default function AppShell({
           manualRoleIds: mode === "experto" ? manualRoleIds : undefined,
           useDemoMode,
           locale,
+          discoveryHistory: finalDiscoveryHistory,
         }),
       });
       const sessionData = await sessionRes.json();
@@ -235,6 +337,8 @@ export default function AppShell({
             title: problem.slice(0, 80),
             problem: enrichedProblem,
             mode,
+            locale: locale ?? null,
+            discovery_history: finalDiscoveryHistory,
             created_at: new Date().toISOString(),
           },
           ...prev,
@@ -288,7 +392,7 @@ export default function AppShell({
       const assessment = await checkDiscovery([], 1);
       if (assessment.sufficient) {
         setDiscoveryStatus("idle");
-        await runFullConsultation(problem);
+        await runFullConsultation(problem, []);
       } else {
         setDiscoveryAssessment(assessment);
         setDiscoveryStatus("awaiting_answer");
@@ -310,7 +414,7 @@ export default function AppShell({
       if (assessment.sufficient) {
         setDiscoveryStatus("idle");
         setDiscoveryAssessment(null);
-        await runFullConsultation(buildEnrichedProblem(problem, newHistory));
+        await runFullConsultation(buildEnrichedProblem(problem, newHistory), newHistory);
       } else {
         setDiscoveryAssessment(assessment);
         setDiscoveryStatus("awaiting_answer");
