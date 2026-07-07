@@ -1,0 +1,81 @@
+<svg viewBox="0 0 800 1300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="headerGrad3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="1300" fill="#f1f5f9"/>
+
+  <!-- Header -->
+  <rect width="800" height="220" fill="url(#headerGrad3)"/>
+  <circle cx="400" cy="70" r="30" fill="#f8fafc"/>
+  <circle cx="335" cy="122" r="21" fill="#dc2626"/>
+  <circle cx="382" cy="138" r="21" fill="#7c3aed"/>
+  <circle cx="435" cy="138" r="21" fill="#059669"/>
+  <circle cx="478" cy="118" r="21" fill="#0891b2"/>
+  <circle cx="308" cy="98" r="16" fill="#db2777"/>
+  <text x="400" y="195" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#ffffff">Como usar AI Council</text>
+
+  <!-- Step 1 -->
+  <g transform="translate(60,255)">
+    <circle cx="35" cy="35" r="35" fill="#0f172a"/>
+    <text x="35" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="#ffffff">1</text>
+    <rect x="90" y="0" width="590" height="105" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="115" y="35" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#0f172a">Escribe tu decision o problema</text>
+    <text x="115" y="63" font-family="Arial, sans-serif" font-size="16" fill="#475569">Ej: "Deberia lanzar mi producto como suscripcion o pago unico?"</text>
+    <text x="115" y="87" font-family="Arial, sans-serif" font-size="16" fill="#475569">Cuanto mas contexto des, mejor sera el analisis</text>
+  </g>
+
+  <!-- Step 2 -->
+  <g transform="translate(60,375)">
+    <circle cx="35" cy="35" r="35" fill="#0f172a"/>
+    <text x="35" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="#ffffff">2</text>
+    <rect x="90" y="0" width="590" height="105" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="115" y="35" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#0f172a">Elige el motor y el modo</text>
+    <text x="115" y="63" font-family="Arial, sans-serif" font-size="16" fill="#475569">Council Simulator (gratis) o Live Mode. Rapido, Consejo</text>
+    <text x="115" y="87" font-family="Arial, sans-serif" font-size="16" fill="#475569">completo, Debate o Experto (eliges tu los especialistas)</text>
+  </g>
+
+  <!-- Step 3 -->
+  <g transform="translate(60,495)">
+    <circle cx="35" cy="35" r="35" fill="#0f172a"/>
+    <text x="35" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="#ffffff">3</text>
+    <rect x="90" y="0" width="590" height="105" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="115" y="35" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#0f172a">Pulsa "Consultar al Consejo"</text>
+    <text x="115" y="63" font-family="Arial, sans-serif" font-size="16" fill="#475569">Cada especialista responde uno a uno, en directo, con su</text>
+    <text x="115" y="87" font-family="Arial, sans-serif" font-size="16" fill="#475569">propia confianza y tiempo de respuesta</text>
+  </g>
+
+  <!-- Step 4 -->
+  <g transform="translate(60,615)">
+    <circle cx="35" cy="35" r="35" fill="#0f172a"/>
+    <text x="35" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="#ffffff">4</text>
+    <rect x="90" y="0" width="590" height="105" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="115" y="35" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#0f172a">Lee el Acta del Consejo</text>
+    <text x="115" y="63" font-family="Arial, sans-serif" font-size="16" fill="#475569">Resumen, acuerdos, desacuerdos, riesgos, preguntas</text>
+    <text x="115" y="87" font-family="Arial, sans-serif" font-size="16" fill="#475569">abiertas y una recomendacion final</text>
+  </g>
+
+  <!-- Step 5 -->
+  <g transform="translate(60,735)">
+    <circle cx="35" cy="35" r="35" fill="#0f172a"/>
+    <text x="35" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="#ffffff">5</text>
+    <rect x="90" y="0" width="590" height="105" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="115" y="35" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#0f172a">Escribe tu decision final</text>
+    <text x="115" y="63" font-family="Arial, sans-serif" font-size="16" fill="#475569">Tu eres el Presidente: el Consejo aconseja, pero la</text>
+    <text x="115" y="87" font-family="Arial, sans-serif" font-size="16" fill="#475569">decision final siempre es tuya</text>
+  </g>
+
+  <!-- Tip box -->
+  <g transform="translate(60,865)">
+    <rect x="0" y="0" width="680" height="120" rx="16" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+    <text x="25" y="35" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1e3a8a">&#128161; Consejo</text>
+    <text x="25" y="65" font-family="Arial, sans-serif" font-size="16" fill="#1e40af">El modo "Council Simulator" es gratis y no necesita ninguna cuenta.</text>
+    <text x="25" y="88" font-family="Arial, sans-serif" font-size="16" fill="#1e40af">Puedes copiar o exportar el acta en Markdown desde el propio panel.</text>
+  </g>
+
+  <text x="400" y="1050" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#94a3b8">AI Council - Consejo de IA</text>
+  <text x="400" y="1075" text-anchor="middle" font-family="monospace" font-size="15" fill="#0891b2">ai-council-one-kappa.vercel.app</text>
+</svg>
