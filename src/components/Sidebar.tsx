@@ -80,7 +80,7 @@ export default function Sidebar({
           onChange={(e) => setNewProjectName(e.target.value)}
           placeholder={t("sidebar.newProjectPlaceholder")}
           disabled={!supabaseConfigured}
-          className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm disabled:bg-slate-100 disabled:text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+          className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 disabled:bg-slate-100 disabled:text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
         />
         <button
           type="submit"

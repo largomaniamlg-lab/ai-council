@@ -81,7 +81,7 @@ export default function ActaPanel({
   const [copied, setCopied] = useState(false);
 
   const inputClass =
-    "mb-2 w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100";
+    "mb-2 w-full rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100";
 
   async function handleSaveDecision() {
     if (!finalDecision.trim()) return;

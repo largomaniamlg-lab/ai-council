@@ -305,7 +305,7 @@ export default function AppShell({
               onChange={(e) => setProblem(e.target.value)}
               placeholder={t("form.problemPlaceholder")}
               rows={3}
-              className="mb-3 w-full resize-none rounded-md border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              className="mb-3 w-full resize-none rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
 
             <label className={labelClass}>{t("form.engineLabel")}</label>
