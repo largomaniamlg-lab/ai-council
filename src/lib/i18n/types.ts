@@ -25,6 +25,7 @@ export interface Dictionary {
     confidenceMedium: string;
     confidenceHigh: string;
     councilAdjourned: string;
+    mockAIBanner: string;
   };
   header: {
     openMenu: string;
@@ -150,6 +151,8 @@ export interface Dictionary {
     apiConfigured: string;
     apiNotConfigured: string;
     apiChecking: string;
+    mockAILabel: string;
+    mockAIHint: string;
   };
   discovery: {
     checking: string;
@@ -183,5 +186,6 @@ export interface Dictionary {
     roundsLabel: string;
     createdLabel: string;
     noRecommendationYet: string;
+    mockTag: string;
   };
 }

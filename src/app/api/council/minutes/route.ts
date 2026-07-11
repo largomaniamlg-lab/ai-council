@@ -18,6 +18,7 @@ interface RequestBody {
   responses: AgentResponse[];
   useDemoMode?: boolean;
   locale?: Locale;
+  mockAI?: boolean;
 }
 
 export async function POST(request: Request) {
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "JSON invalido en la peticion." }, { status: 400 });
   }
 
-  const { sessionId, problem, responses, useDemoMode, locale } = body;
+  const { sessionId, problem, responses, useDemoMode, locale, mockAI } = body;
 
   if (!problem || !Array.isArray(responses) || responses.length === 0) {
     return NextResponse.json(
@@ -44,7 +45,8 @@ export async function POST(request: Request) {
     problem,
     responses,
     useDemoMode,
-    locale
+    locale,
+    mockAI
   );
 
   if (sessionId && isSupabaseConfigured()) {

@@ -68,8 +68,18 @@ function SegmentedControl<T extends string | boolean>({
 }
 
 export default function SettingsPage() {
-  const { locale, setLocale, theme, setTheme, devMode, setDevMode, revealDelayMs, setRevealDelayMs } =
-    useSettings();
+  const {
+    locale,
+    setLocale,
+    theme,
+    setTheme,
+    devMode,
+    setDevMode,
+    revealDelayMs,
+    setRevealDelayMs,
+    mockAI,
+    setMockAI,
+  } = useSettings();
   const { t } = useTranslation();
   const [status, setStatus] = useState<StatusResponse | null>(null);
 
@@ -175,6 +185,27 @@ export default function SettingsPage() {
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             {t("settings.devModeHint")}
           </p>
+
+          {devMode && (
+            <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-700">
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  {t("settings.mockAILabel")}
+                </span>
+                <SegmentedControl
+                  value={mockAI}
+                  onChange={setMockAI}
+                  options={[
+                    { id: true, label: t("settings.devModeOn") },
+                    { id: false, label: t("settings.devModeOff") },
+                  ]}
+                />
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {t("settings.mockAIHint")}
+              </p>
+            </div>
+          )}
         </SectionCard>
 
         <SectionCard title={t("settings.engineSection")}>

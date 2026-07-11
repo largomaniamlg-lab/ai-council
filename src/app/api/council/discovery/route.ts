@@ -13,6 +13,7 @@ interface RequestBody {
   round?: number;
   useDemoMode?: boolean;
   locale?: Locale;
+  mockAI?: boolean;
 }
 
 export async function POST(request: Request) {
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "JSON invalido en la peticion." }, { status: 400 });
   }
 
-  const { problem, history, round, useDemoMode, locale } = body;
+  const { problem, history, round, useDemoMode, locale, mockAI } = body;
 
   if (!problem || !problem.trim()) {
     return NextResponse.json({ error: "El problema o decision no puede estar vacio." }, { status: 400 });
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
     round: round ?? 1,
     useDemoMode,
     locale,
+    mockAI,
   });
 
   return NextResponse.json({ assessment });

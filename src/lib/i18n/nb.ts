@@ -16,6 +16,7 @@ export const nb: Dictionary = {
     confidenceMedium: "Middels",
     confidenceHigh: "Svaert hoy",
     councilAdjourned: "Radet er avsluttet",
+    mockAIBanner: "Mock AI aktiv — ingen foresporsel sendes til en ekstern leverandor",
   },
   header: {
     openMenu: "Apne meny",
@@ -209,6 +210,9 @@ export const nb: Dictionary = {
     apiConfigured: "Konfigurert",
     apiNotConfigured: "Ikke konfigurert",
     apiChecking: "Sjekker...",
+    mockAILabel: "Mock AI",
+    mockAIHint:
+      "Nar dette er pa, bruker Discovery, spesialister, Ordstyrer og Challenge lokale maler i stedet for a kalle en ekte leverandor. Null eksterne kall, null kostnad.",
   },
   discovery: {
     checking: "Radet vurderer om det har nok informasjon...",
@@ -243,5 +247,6 @@ export const nb: Dictionary = {
     roundsLabel: "runder",
     createdLabel: "Opprettet",
     noRecommendationYet: "Ingen anbefaling enna",
+    mockTag: "Mock",
   },
 };

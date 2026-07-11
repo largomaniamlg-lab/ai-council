@@ -25,6 +25,7 @@ interface RequestBody {
   useDemoMode?: boolean;
   locale?: Locale;
   discoveryHistory?: DiscoveryQA[];
+  mockAI?: boolean;
 }
 
 export async function POST(request: Request) {
@@ -35,7 +36,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "JSON invalido en la peticion." }, { status: 400 });
   }
 
-  const { projectId, title, problem, mode, manualRoleIds, useDemoMode, locale, discoveryHistory } = body;
+  const { projectId, title, problem, mode, manualRoleIds, useDemoMode, locale, discoveryHistory, mockAI } =
+    body;
 
   if (!problem || !problem.trim()) {
     return NextResponse.json({ error: "El problema o decision no puede estar vacio." }, { status: 400 });
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Falta el modo del Consejo (mode)." }, { status: 400 });
   }
 
-  const result = await runCouncil({ problem, mode, manualRoleIds, useDemoMode, locale });
+  const result = await runCouncil({ problem, mode, manualRoleIds, useDemoMode, locale, mockAI });
 
   let sessionId: string | null = null;
   if (projectId && isSupabaseConfigured()) {
@@ -59,6 +61,7 @@ export async function POST(request: Request) {
         mode,
         locale,
         discoveryHistory,
+        source: mockAI ? "mock" : "real",
       });
       if (session) {
         sessionId = session.id;

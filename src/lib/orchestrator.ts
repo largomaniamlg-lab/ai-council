@@ -29,6 +29,9 @@ export interface RunCouncilInput {
   manualRoleIds?: string[];
   useDemoMode?: boolean;
   locale?: Locale;
+  // v0.5.3 Mock AI: fuerza el uso de plantillas locales sin llamar a
+  // ningun proveedor, independientemente de useDemoMode.
+  mockAI?: boolean;
 }
 
 // Un unico Council Engine para ambos modos: Council Simulator (useDemoMode)
@@ -41,7 +44,8 @@ async function callSpecialist(
   round: number,
   useDemoMode: boolean,
   locale: Locale | undefined,
-  context?: string
+  context?: string,
+  mockAI = false
 ): Promise<AgentResponse> {
   const baseUserPrompt = context
     ? `Decision o problema planteado por el Presidente:\n${problem}\n\nInformes de otros especialistas en la ronda anterior:\n${context}\n\nResponde ahora reaccionando a los puntos de desacuerdo, manteniendo tu rol.`
@@ -67,12 +71,12 @@ async function callSpecialist(
   const provider = getProvider(providerId);
   const startedAt = Date.now();
 
-  if (!provider.isConfigured()) {
-    // Sin API key configurada todavia (ni siquiera la gratuita de
-    // OpenRouter para el Council Simulator): recurrimos a una plantilla
-    // local para que la demo no se rompa mientras el Presidente termina
-    // el setup.
-    if (useDemoMode) {
+  if (mockAI || !provider.isConfigured()) {
+    // Mock AI activo, o sin API key configurada todavia (ni siquiera la
+    // gratuita de OpenRouter para el Council Simulator): recurrimos a una
+    // plantilla local para que la demo no se rompa mientras el Presidente
+    // termina el setup, o para no gastar cuota si Mock AI esta activo.
+    if (mockAI || useDemoMode) {
       return {
         ...base,
         response: generateDemoResponse(role, problem),
@@ -118,6 +122,7 @@ export async function runCouncil({
   manualRoleIds,
   useDemoMode = false,
   locale,
+  mockAI = false,
 }: RunCouncilInput): Promise<OrchestratorResult> {
   const roles = resolveRolesForMode(mode, manualRoleIds);
 
@@ -126,7 +131,7 @@ export async function runCouncil({
   }
 
   const round1 = await Promise.all(
-    roles.map((role) => callSpecialist(role, problem, 1, useDemoMode, locale))
+    roles.map((role) => callSpecialist(role, problem, 1, useDemoMode, locale, undefined, mockAI))
   );
 
   if (mode !== "debate") {
@@ -140,7 +145,7 @@ export async function runCouncil({
     .join("\n");
 
   const round2 = await Promise.all(
-    roles.map((role) => callSpecialist(role, problem, 2, useDemoMode, locale, contextForRound2))
+    roles.map((role) => callSpecialist(role, problem, 2, useDemoMode, locale, contextForRound2, mockAI))
   );
 
   return {
@@ -162,7 +167,8 @@ async function callSpecialistChallenge(
   locale: Locale | undefined,
   ownPriorResponse: AgentResponse | undefined,
   latestMinutes: CouncilMinutes,
-  challenge: string
+  challenge: string,
+  mockAI = false
 ): Promise<AgentResponse> {
   const userPrompt = `Decision o problema planteado por el Presidente:\n${problem}\n\nTu informe anterior (ronda ${
     ownPriorResponse?.round ?? round - 1
@@ -187,8 +193,8 @@ async function callSpecialistChallenge(
   const provider = getProvider(providerId);
   const startedAt = Date.now();
 
-  if (!provider.isConfigured()) {
-    if (useDemoMode) {
+  if (mockAI || !provider.isConfigured()) {
+    if (mockAI || useDemoMode) {
       return {
         ...base,
         response: generateDemoChallengeResponse(role, problem, challenge),
@@ -234,6 +240,7 @@ export interface ContinueDeliberationInput {
   nextRound: number;
   useDemoMode?: boolean;
   locale?: Locale;
+  mockAI?: boolean;
 }
 
 // "Challenge the Council" (Modo A, re-deliberacion completa): vuelve a
@@ -248,6 +255,7 @@ export async function continueDeliberation({
   nextRound,
   useDemoMode = false,
   locale,
+  mockAI = false,
 }: ContinueDeliberationInput): Promise<AgentResponse[]> {
   const roles = roleIds.map((id) => getRoleById(id)).filter((r): r is CouncilRole => Boolean(r));
 
@@ -266,7 +274,8 @@ export async function continueDeliberation({
         locale,
         ownPrior,
         latestMinutes,
-        challenge
+        challenge,
+        mockAI
       );
     })
   );

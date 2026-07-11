@@ -44,7 +44,7 @@ export default function AppShell({
   supabaseConfigured: boolean;
 }) {
   const { t } = useTranslation();
-  const { revealDelayMs, locale } = useSettings();
+  const { revealDelayMs, locale, mockAI } = useSettings();
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     initialProjects[0]?.id ?? null
@@ -125,6 +125,7 @@ export default function AppShell({
       minutesHistory,
       decision,
       outcome,
+      source: mockAI ? "mock" : "real",
       createdAt: existing?.createdAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -139,6 +140,7 @@ export default function AppShell({
     minutesHistory,
     decision,
     outcome,
+    mockAI,
   ]);
 
   function hydrateFromDetail(
@@ -289,7 +291,7 @@ export default function AppShell({
     const res = await fetch("/api/council/discovery", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ problem, history, round, useDemoMode, locale }),
+      body: JSON.stringify({ problem, history, round, useDemoMode, locale, mockAI }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? t("errors.unexpected"));
@@ -319,6 +321,7 @@ export default function AppShell({
           useDemoMode,
           locale,
           discoveryHistory: finalDiscoveryHistory,
+          mockAI,
         }),
       });
       const sessionData = await sessionRes.json();
@@ -340,6 +343,7 @@ export default function AppShell({
             mode,
             locale: locale ?? null,
             discovery_history: finalDiscoveryHistory,
+            source: mockAI ? "mock" : "real",
             created_at: new Date().toISOString(),
           },
           ...prev,
@@ -357,6 +361,7 @@ export default function AppShell({
           responses: sessionData.responses,
           useDemoMode,
           locale,
+          mockAI,
         }),
       });
       const minutesData = await minutesRes.json();
@@ -459,6 +464,7 @@ export default function AppShell({
             nextRound,
             useDemoMode,
             locale,
+            mockAI,
           }),
         });
         const data = await res.json();
@@ -491,6 +497,7 @@ export default function AppShell({
             nextRound,
             useDemoMode,
             locale,
+            mockAI,
           }),
         });
         const data = await res.json();
@@ -577,6 +584,11 @@ export default function AppShell({
 
       <main className="flex flex-1 flex-col p-4 md:overflow-y-auto md:p-6">
         <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4">
+          {mockAI && (
+            <div className="rounded-lg border border-violet-300 bg-violet-50 px-3 py-2 text-xs font-medium text-violet-800 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300">
+              &#129302; {t("common.mockAIBanner")}
+            </div>
+          )}
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <label className={labelClass}>{t("form.problemLabel")}</label>
             <textarea

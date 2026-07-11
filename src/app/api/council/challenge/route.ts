@@ -20,6 +20,7 @@ interface RequestBody {
   nextRound: number;
   useDemoMode?: boolean;
   locale?: Locale;
+  mockAI?: boolean;
 }
 
 export async function POST(request: Request) {
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
     nextRound,
     useDemoMode,
     locale,
+    mockAI,
   } = body;
 
   if (!problem || !problem.trim()) {
@@ -81,6 +83,7 @@ export async function POST(request: Request) {
       nextRound,
       useDemoMode,
       locale,
+      mockAI,
     });
 
     const { minutes, markdown } = await generateChallengeMinutes({
@@ -92,6 +95,7 @@ export async function POST(request: Request) {
       isModeratorOnly: false,
       useDemoMode,
       locale,
+      mockAI,
     });
 
     if (sessionId && isSupabaseConfigured()) {
@@ -116,6 +120,7 @@ export async function POST(request: Request) {
     isModeratorOnly: true,
     useDemoMode,
     locale,
+    mockAI,
   });
 
   if (sessionId && isSupabaseConfigured()) {

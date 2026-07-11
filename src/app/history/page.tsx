@@ -12,7 +12,8 @@ type HistoryStatus = "in_progress" | "completed" | "decision_saved";
 
 interface HistoryRow {
   id: string;
-  source: "supabase" | "local";
+  backend: "supabase" | "local";
+  aiSource: "real" | "mock";
   projectId: string | null;
   projectName: string | null;
   title: string;
@@ -29,7 +30,8 @@ function localToRow(s: LocalSession): HistoryRow {
   const latest = s.minutesHistory[s.minutesHistory.length - 1];
   return {
     id: s.id,
-    source: "local",
+    backend: "local",
+    aiSource: s.source ?? "real",
     projectId: null,
     projectName: null,
     title: s.title,
@@ -76,8 +78,16 @@ export default function HistoryPage() {
         try {
           const res = await fetch("/api/history");
           const data = await res.json();
-          const fetched = (data.sessions ?? []) as Omit<HistoryRow, "source">[];
-          setRows(fetched.map((s) => ({ ...s, source: "supabase" as const })));
+          const fetched = (data.sessions ?? []) as Array<
+            Omit<HistoryRow, "backend" | "aiSource"> & { source: "real" | "mock" }
+          >;
+          setRows(
+            fetched.map(({ source, ...rest }) => ({
+              ...rest,
+              backend: "supabase" as const,
+              aiSource: source,
+            }))
+          );
         } catch {
           setRows([]);
         }
@@ -113,7 +123,7 @@ export default function HistoryPage() {
 
   async function handleDelete(row: HistoryRow) {
     if (!window.confirm(t("history.deleteConfirm"))) return;
-    if (row.source === "supabase") {
+    if (row.backend === "supabase") {
       await fetch(`/api/history/${row.id}`, { method: "DELETE" });
     } else {
       deleteLocalSession(row.id);
@@ -123,7 +133,7 @@ export default function HistoryPage() {
 
   async function handleExport(row: HistoryRow) {
     let markdown = "";
-    if (row.source === "supabase") {
+    if (row.backend === "supabase") {
       const res = await fetch(`/api/sessions/${row.id}`);
       const data = await res.json();
       markdown = (data.minutesHistory ?? [])
@@ -240,6 +250,11 @@ export default function HistoryPage() {
                 <div className="mb-1 flex flex-wrap items-center gap-2">
                   <h2 className="font-semibold text-slate-800 dark:text-slate-100">{row.title}</h2>
                   {statusBadge(row.status)}
+                  {row.aiSource === "mock" && (
+                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-400">
+                      {t("history.mockTag")}
+                    </span>
+                  )}
                 </div>
                 <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
                   {new Date(row.createdAt).toLocaleString()} &middot; {tMode(row.mode).label}

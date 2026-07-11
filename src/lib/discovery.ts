@@ -70,6 +70,7 @@ export interface AssessDiscoveryInput {
   round: number;
   useDemoMode?: boolean;
   locale?: Locale;
+  mockAI?: boolean;
 }
 
 // Fase de Discovery (v0.5): antes de convocar a los especialistas, el
@@ -82,6 +83,7 @@ export async function assessDiscovery({
   round,
   useDemoMode = false,
   locale,
+  mockAI = false,
 }: AssessDiscoveryInput): Promise<DiscoveryAssessment> {
   if (round > MAX_DISCOVERY_ROUNDS) {
     return {
@@ -98,8 +100,8 @@ export async function assessDiscovery({
   const model = useDemoMode ? SIMULATOR_MODEL : moderator.model;
   const provider = getProvider(providerId);
 
-  if (!provider.isConfigured()) {
-    if (useDemoMode) {
+  if (mockAI || !provider.isConfigured()) {
+    if (mockAI || useDemoMode) {
       return generateDemoDiscovery(problem, round);
     }
     return {

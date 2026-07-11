@@ -26,6 +26,9 @@ export interface LocalSession {
   minutesHistory: (CouncilMinutes & { markdown: string })[];
   decision: PresidentDecision | null;
   outcome: SessionOutcome | null;
+  // v0.5.3 Mock AI: "mock" si la sesion se genero sin llamar a ningun
+  // proveedor externo.
+  source: "real" | "mock";
   createdAt: string;
   updatedAt: string;
 }

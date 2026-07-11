@@ -23,6 +23,9 @@ export interface Session {
   mode: CouncilMode;
   locale: string | null;
   discovery_history: DiscoveryQA[];
+  // v0.5.3 Mock AI: "mock" si la sesion se genero sin llamar a ningun
+  // proveedor externo (para diferenciarla en Historial y futuras metricas).
+  source: "real" | "mock";
   created_at: string;
 }
 
@@ -48,6 +51,7 @@ export interface HistorySessionSummary {
   rounds: number;
   finalRecommendation: string;
   status: "in_progress" | "completed" | "decision_saved";
+  source: "real" | "mock";
   createdAt: string;
 }
 
@@ -101,6 +105,7 @@ export async function createSession(input: {
   mode: CouncilMode;
   locale?: string;
   discoveryHistory?: DiscoveryQA[];
+  source?: "real" | "mock";
 }): Promise<Session | null> {
   const supabase = getSupabaseServerClient();
   if (!supabase) return null;
@@ -114,6 +119,7 @@ export async function createSession(input: {
       mode: input.mode,
       locale: input.locale ?? null,
       discovery_history: input.discoveryHistory ?? [],
+      source: input.source ?? "real",
     })
     .select("*")
     .single();
@@ -276,6 +282,8 @@ export async function getSessionDetail(sessionId: string): Promise<SessionDetail
   };
 }
 
+
+
 // v0.5.1 Session History: lista todas las sesiones (de cualquier proyecto)
 // con un resumen ligero, para la pagina /history. No trae los informes ni
 // las actas completas, solo lo necesario para listar/filtrar/buscar.
@@ -322,6 +330,7 @@ export async function listAllSessionsSummary(): Promise<HistorySessionSummary[]>
       rounds: latest?.round ?? 0,
       finalRecommendation: latest?.recommendation ?? "",
       status: decidedIds.has(s.id) ? "decision_saved" : latest ? "completed" : "in_progress",
+      source: s.source ?? "real",
       createdAt: s.created_at,
     };
   });

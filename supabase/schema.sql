@@ -18,6 +18,7 @@ create table if not exists sessions (
   mode text not null check (mode in ('rapido', 'completo', 'debate', 'experto')),
   locale text,
   discovery_history jsonb not null default '[]',
+  source text not null default 'real' check (source in ('real', 'mock')),
   created_at timestamptz not null default now()
 );
 
@@ -65,6 +66,9 @@ alter table council_minutes add column if not exists convergence_note text;
 -- schema ya existia sin ellas.
 alter table sessions add column if not exists locale text;
 alter table sessions add column if not exists discovery_history jsonb not null default '[]';
+
+-- Migracion v0.5.3 (Mock AI): idem.
+alter table sessions add column if not exists source text not null default 'real' check (source in ('real', 'mock'));
 
 create table if not exists president_decisions (
   id uuid primary key default uuid_generate_v4(),

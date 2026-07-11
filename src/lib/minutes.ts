@@ -89,7 +89,8 @@ export async function generateCouncilMinutes(
   problem: string,
   responses: AgentResponse[],
   useDemoMode = false,
-  locale?: Locale
+  locale?: Locale,
+  mockAI = false
 ): Promise<{ minutes: CouncilMinutes; markdown: string }> {
   const moderator = getModeratorRole();
 
@@ -99,11 +100,12 @@ export async function generateCouncilMinutes(
   const model = useDemoMode ? SIMULATOR_MODEL : moderator.model;
   const provider = getProvider(providerId);
 
-  if (!provider.isConfigured()) {
-    // Sin API key configurada todavia: si es el Council Simulator, cae en
-    // una plantilla local para no romper la demo mientras se termina el
-    // setup; en Live Mode se informa del proveedor que falta configurar.
-    if (useDemoMode) {
+  if (mockAI || !provider.isConfigured()) {
+    // Mock AI activo, o sin API key configurada todavia: si es el Council
+    // Simulator (o Mock AI), cae en una plantilla local para no romper la
+    // demo mientras se termina el setup o para no gastar cuota; en Live
+    // Mode sin Mock AI se informa del proveedor que falta configurar.
+    if (mockAI || useDemoMode) {
       minutes = { ...generateDemoMinutes(problem), round: 1 };
       return { minutes, markdown: minutesToMarkdown(problem, minutes) };
     }
@@ -216,6 +218,7 @@ export interface ChallengeMinutesInput {
   isModeratorOnly: boolean;
   useDemoMode?: boolean;
   locale?: Locale;
+  mockAI?: boolean;
 }
 
 // Genera el acta de una ronda de deliberacion (tras un "Challenge the
@@ -230,6 +233,7 @@ export async function generateChallengeMinutes({
   isModeratorOnly,
   useDemoMode = false,
   locale,
+  mockAI = false,
 }: ChallengeMinutesInput): Promise<{ minutes: CouncilMinutes; markdown: string }> {
   const moderator = getModeratorRole();
   const fallbackVerdict = isModeratorOnly ? undefined : deriveVerdictFromStances(roundResponses);
@@ -240,8 +244,8 @@ export async function generateChallengeMinutes({
   const model = useDemoMode ? SIMULATOR_MODEL : moderator.model;
   const provider = getProvider(providerId);
 
-  if (!provider.isConfigured()) {
-    if (useDemoMode) {
+  if (mockAI || !provider.isConfigured()) {
+    if (mockAI || useDemoMode) {
       minutes = {
         ...generateDemoMinutes(problem),
         round,

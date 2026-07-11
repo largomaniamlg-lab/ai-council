@@ -10,6 +10,10 @@ interface AppSettings {
   theme: Theme;
   devMode: boolean;
   revealDelayMs: number;
+  // v0.5.3 Mock AI: cuando esta activo, ninguna llamada llega a un
+  // proveedor externo (Discovery, especialistas, Moderador, Challenge usan
+  // las plantillas locales). Solo tiene efecto visible con Developer Mode.
+  mockAI: boolean;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -17,6 +21,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   theme: "light",
   devMode: false,
   revealDelayMs: 500,
+  mockAI: false,
 };
 
 const STORAGE_KEY = "ai-council-settings";
@@ -26,6 +31,7 @@ interface SettingsContextValue extends AppSettings {
   setTheme: (theme: Theme) => void;
   setDevMode: (value: boolean) => void;
   setRevealDelayMs: (ms: number) => void;
+  setMockAI: (value: boolean) => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -84,6 +90,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setTheme: (theme) => setSettings((s) => ({ ...s, theme })),
     setDevMode: (devMode) => setSettings((s) => ({ ...s, devMode })),
     setRevealDelayMs: (revealDelayMs) => setSettings((s) => ({ ...s, revealDelayMs })),
+    setMockAI: (mockAI) => setSettings((s) => ({ ...s, mockAI })),
   };
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

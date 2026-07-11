@@ -16,6 +16,7 @@ export const es: Dictionary = {
     confidenceMedium: "Media",
     confidenceHigh: "Muy alta",
     councilAdjourned: "Consejo clausurado",
+    mockAIBanner: "Mock AI activo — ninguna llamada sale a un proveedor externo",
   },
   header: {
     openMenu: "Abrir menu",
@@ -209,6 +210,9 @@ export const es: Dictionary = {
     apiConfigured: "Configurada",
     apiNotConfigured: "No configurada",
     apiChecking: "Comprobando...",
+    mockAILabel: "Mock AI",
+    mockAIHint:
+      "Cuando esta activo, Discovery, especialistas, Moderador y Challenge usan plantillas locales en vez de llamar a un proveedor real. Cero llamadas externas, cero coste.",
   },
   discovery: {
     checking: "El Consejo esta evaluando si tiene informacion suficiente...",
@@ -243,5 +247,6 @@ export const es: Dictionary = {
     roundsLabel: "rondas",
     createdLabel: "Creada",
     noRecommendationYet: "Sin recomendacion todavia",
+    mockTag: "Mock",
   },
 };
