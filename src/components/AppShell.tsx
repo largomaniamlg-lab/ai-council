@@ -10,6 +10,7 @@ import ActaPanel from "@/components/ActaPanel";
 import DiscoveryPanel from "@/components/DiscoveryPanel";
 import type { Project, Session } from "@/lib/data";
 import { getLocalSession, saveLocalSession } from "@/lib/localHistory";
+import { MAX_TEXT_LENGTH } from "@/lib/validation";
 import {
   getRoleById,
   resolveRolesForMode,
@@ -583,8 +584,12 @@ export default function AppShell({
               onChange={(e) => setProblem(e.target.value)}
               placeholder={t("form.problemPlaceholder")}
               rows={3}
-              className="mb-3 w-full resize-none rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              maxLength={MAX_TEXT_LENGTH}
+              className="mb-1 w-full resize-none rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
+            <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
+              {t("form.privacyNotice")}
+            </p>
 
             <label className={labelClass}>{t("form.engineLabel")}</label>
             <div className="mb-3 flex rounded-md bg-slate-100 p-1 text-sm font-medium dark:bg-slate-800">

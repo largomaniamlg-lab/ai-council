@@ -54,6 +54,7 @@ export interface Dictionary {
     consultingButton: string;
     currentProblemLabel: string;
     recommendedBadge: string;
+    privacyNotice: string;
   };
   modes: {
     rapido: ModeTranslation;

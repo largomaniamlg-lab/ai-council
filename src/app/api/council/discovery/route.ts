@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { assessDiscovery } from "@/lib/discovery";
+import { isValidText } from "@/lib/validation";
 import type { DiscoveryQA } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 
@@ -26,6 +27,12 @@ export async function POST(request: Request) {
 
   if (!problem || !problem.trim()) {
     return NextResponse.json({ error: "El problema o decision no puede estar vacio." }, { status: 400 });
+  }
+  if (!isValidText(problem)) {
+    return NextResponse.json({ error: "El problema o decision es demasiado largo." }, { status: 400 });
+  }
+  if ((history ?? []).some((h) => !isValidText(h.answer))) {
+    return NextResponse.json({ error: "Una de las respuestas de Discovery es demasiado larga." }, { status: 400 });
   }
 
   const assessment = await assessDiscovery({

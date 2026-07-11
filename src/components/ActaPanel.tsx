@@ -7,6 +7,7 @@ import { VerdictBadge, TrendBadge } from "@/components/VerdictBadge";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { averageConfidence, confidenceTrend, type ConfidenceTrend } from "@/lib/confidenceParsing";
 import { MAX_DELIBERATION_ROUNDS } from "@/lib/orchestrator";
+import { MAX_TEXT_LENGTH } from "@/lib/validation";
 import type { AgentResponse, CouncilMinutes, PresidentDecision, SessionOutcome } from "@/lib/types";
 
 type MinutesRound = CouncilMinutes & { markdown: string };
@@ -284,6 +285,7 @@ export default function ActaPanel({
                 placeholder={t("acta.challengePlaceholder")}
                 rows={3}
                 disabled={busy}
+                maxLength={MAX_TEXT_LENGTH}
                 className={inputClass}
               />
               {challengeError && (
@@ -323,6 +325,7 @@ export default function ActaPanel({
               onChange={(e) => setFinalDecision(e.target.value)}
               placeholder={t("acta.finalDecisionPlaceholder")}
               rows={3}
+              maxLength={MAX_TEXT_LENGTH}
               className={inputClass}
             />
             <textarea
@@ -330,6 +333,7 @@ export default function ActaPanel({
               onChange={(e) => setRationale(e.target.value)}
               placeholder={t("acta.rationalePlaceholder")}
               rows={2}
+              maxLength={MAX_TEXT_LENGTH}
               className={inputClass}
             />
             <textarea
@@ -337,6 +341,7 @@ export default function ActaPanel({
               onChange={(e) => setExpectedResult(e.target.value)}
               placeholder={t("acta.expectedResultPlaceholder")}
               rows={2}
+              maxLength={MAX_TEXT_LENGTH}
               className={inputClass}
             />
             <button
@@ -378,6 +383,7 @@ export default function ActaPanel({
                     onChange={(e) => setActualResult(e.target.value)}
                     placeholder={t("acta.actualResultPlaceholder")}
                     rows={2}
+                    maxLength={MAX_TEXT_LENGTH}
                     className={inputClass}
                   />
                   <textarea
@@ -385,6 +391,7 @@ export default function ActaPanel({
                     onChange={(e) => setWhatWorked(e.target.value)}
                     placeholder={t("acta.whatWorkedPlaceholder")}
                     rows={2}
+                    maxLength={MAX_TEXT_LENGTH}
                     className={inputClass}
                   />
                   <textarea
@@ -392,6 +399,7 @@ export default function ActaPanel({
                     onChange={(e) => setWhatFailed(e.target.value)}
                     placeholder={t("acta.whatFailedPlaceholder")}
                     rows={2}
+                    maxLength={MAX_TEXT_LENGTH}
                     className={inputClass}
                   />
                   <textarea
@@ -399,6 +407,7 @@ export default function ActaPanel({
                     onChange={(e) => setLessons(e.target.value)}
                     placeholder={t("acta.lessonsPlaceholder")}
                     rows={2}
+                    maxLength={MAX_TEXT_LENGTH}
                     className={inputClass}
                   />
                   <button

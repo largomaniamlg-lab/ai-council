@@ -47,6 +47,8 @@ export const es: Dictionary = {
     consultingButton: "Consultando al Consejo...",
     currentProblemLabel: "Problema en curso:",
     recommendedBadge: "Recomendado",
+    privacyNotice:
+      "Lo que escribas se envia al proveedor de IA configurado. No incluyas contrasenas, datos bancarios, historiales medicos identificables ni secretos empresariales.",
   },
   modes: {
     rapido: { label: "Rapido", description: "Riesgos + Analista Critico. Bajo coste." },

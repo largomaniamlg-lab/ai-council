@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { runCouncil } from "@/lib/orchestrator";
 import { createSession, saveAgentResponses, isSupabaseConfigured } from "@/lib/data";
+import { isValidText, MAX_TEXT_LENGTH } from "@/lib/validation";
 import type { CouncilMode } from "@/config/councilRoles";
 import type { Locale } from "@/lib/i18n";
 import type { DiscoveryQA } from "@/lib/types";
+
+// El problema que llega aqui puede venir enriquecido con el historial de
+// Discovery (varias preguntas y respuestas concatenadas), por lo que se
+// admite un limite mayor que el de un unico campo de texto libre.
+const MAX_ENRICHED_PROBLEM_LENGTH = MAX_TEXT_LENGTH * 3;
 
 // El Council Simulator (modelo gratuito) puede tardar 15-90s por
 // especialista. El limite por defecto de Vercel (Hobby, Fluid Compute) es
@@ -33,6 +39,9 @@ export async function POST(request: Request) {
 
   if (!problem || !problem.trim()) {
     return NextResponse.json({ error: "El problema o decision no puede estar vacio." }, { status: 400 });
+  }
+  if (!isValidText(problem, MAX_ENRICHED_PROBLEM_LENGTH)) {
+    return NextResponse.json({ error: "El problema o decision es demasiado largo." }, { status: 400 });
   }
   if (!mode) {
     return NextResponse.json({ error: "Falta el modo del Consejo (mode)." }, { status: 400 });

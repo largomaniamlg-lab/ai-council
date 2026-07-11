@@ -47,6 +47,8 @@ export const nb: Dictionary = {
     consultingButton: "Sporrer Radet...",
     currentProblemLabel: "Naverende problem:",
     recommendedBadge: "Anbefalt",
+    privacyNotice:
+      "Det du skriver sendes til den konfigurerte KI-leverandoren. Ikke inkluder passord, bankopplysninger, identifiserbar helseinformasjon eller konfidensielle forretningshemmeligheter.",
   },
   modes: {
     rapido: { label: "Rask", description: "Risikodirektor + Kritisk analytiker. Lav kostnad." },

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { saveOutcome, isSupabaseConfigured } from "@/lib/data";
+import { isValidOptionalText } from "@/lib/validation";
 
 interface RequestBody {
   sessionId: string;
@@ -21,6 +22,14 @@ export async function POST(request: Request) {
 
   if (!sessionId) {
     return NextResponse.json({ error: "Falta la sesion." }, { status: 400 });
+  }
+  if (
+    !isValidOptionalText(actualResult) ||
+    !isValidOptionalText(whatWorked) ||
+    !isValidOptionalText(whatFailed) ||
+    !isValidOptionalText(lessons)
+  ) {
+    return NextResponse.json({ error: "Uno de los campos es demasiado largo." }, { status: 400 });
   }
 
   if (!isSupabaseConfigured()) {

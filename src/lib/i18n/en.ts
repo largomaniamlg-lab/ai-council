@@ -47,6 +47,8 @@ export const en: Dictionary = {
     consultingButton: "Consulting the Council...",
     currentProblemLabel: "Current problem:",
     recommendedBadge: "Recommended",
+    privacyNotice:
+      "What you write is sent to the configured AI provider. Don't include passwords, financial details, identifiable medical history, or confidential business secrets.",
   },
   modes: {
     rapido: { label: "Quick", description: "Risk Director + Critical Analyst. Low cost." },

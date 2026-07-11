@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { MAX_TEXT_LENGTH } from "@/lib/validation";
 import type { DiscoveryAssessment } from "@/lib/types";
 
 export default function DiscoveryPanel({
@@ -77,6 +78,7 @@ export default function DiscoveryPanel({
         placeholder={t("discovery.answerPlaceholder")}
         rows={3}
         disabled={isSubmitting}
+        maxLength={MAX_TEXT_LENGTH}
         className="mb-3 w-full resize-none rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       />
 
