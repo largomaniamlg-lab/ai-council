@@ -53,6 +53,7 @@ export interface Dictionary {
     consultButton: string;
     consultingButton: string;
     currentProblemLabel: string;
+    recommendedBadge: string;
   };
   modes: {
     rapido: ModeTranslation;
@@ -116,6 +117,7 @@ export interface Dictionary {
     askingModerator: string;
     maxRoundsReached: string;
     moderatorOnlyTag: string;
+    challengeConsumptionHint: string;
   };
   settings: {
     title: string;

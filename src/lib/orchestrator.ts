@@ -14,6 +14,7 @@ import {
   extractConfidence,
   extractStance,
 } from "@/lib/confidenceParsing";
+import { friendlyProviderErrorMessage } from "@/lib/providerErrors";
 import type { Locale } from "@/lib/i18n";
 import type { AgentResponse, CouncilMinutes, OrchestratorResult } from "@/lib/types";
 
@@ -100,7 +101,7 @@ async function callSpecialist(
     return {
       ...base,
       response: "",
-      error: err instanceof Error ? err.message : "Error desconocido al consultar al especialista.",
+      error: friendlyProviderErrorMessage(err),
       elapsedMs: Date.now() - startedAt,
     };
   }
@@ -218,7 +219,7 @@ async function callSpecialistChallenge(
     return {
       ...base,
       response: "",
-      error: err instanceof Error ? err.message : "Error desconocido al consultar al especialista.",
+      error: friendlyProviderErrorMessage(err),
       elapsedMs: Date.now() - startedAt,
     };
   }

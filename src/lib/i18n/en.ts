@@ -46,6 +46,7 @@ export const en: Dictionary = {
     consultButton: "Consult the Council",
     consultingButton: "Consulting the Council...",
     currentProblemLabel: "Current problem:",
+    recommendedBadge: "Recommended",
   },
   modes: {
     rapido: { label: "Quick", description: "Risk Director + Critical Analyst. Low cost." },
@@ -173,6 +174,8 @@ export const en: Dictionary = {
     maxRoundsReached:
       "The maximum number of deliberation rounds has been reached. You can now record your final decision.",
     moderatorOnlyTag: "Moderator only",
+    challengeConsumptionHint:
+      "This consults every specialist and the Moderator again (several model calls).",
   },
   settings: {
     title: "Settings",

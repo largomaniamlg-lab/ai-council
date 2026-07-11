@@ -46,6 +46,7 @@ export const es: Dictionary = {
     consultButton: "Consultar al Consejo",
     consultingButton: "Consultando al Consejo...",
     currentProblemLabel: "Problema en curso:",
+    recommendedBadge: "Recomendado",
   },
   modes: {
     rapido: { label: "Rapido", description: "Riesgos + Analista Critico. Bajo coste." },
@@ -173,6 +174,8 @@ export const es: Dictionary = {
     maxRoundsReached:
       "Se ha alcanzado el numero maximo de rondas de deliberacion. Puedes registrar tu decision final.",
     moderatorOnlyTag: "Solo Moderador",
+    challengeConsumptionHint:
+      "Esto vuelve a consultar a todos los especialistas y al Moderador (varias llamadas al modelo).",
   },
   settings: {
     title: "Configuracion",

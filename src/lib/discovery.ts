@@ -3,13 +3,16 @@ import { getProvider } from "@/lib/aiProviders";
 import { generateDemoDiscovery } from "@/lib/demoContent";
 import { SIMULATOR_PROVIDER, SIMULATOR_MODEL } from "@/lib/simulatorEngine";
 import { getLanguageInstruction } from "@/lib/promptLocale";
+import { friendlyProviderErrorMessage } from "@/lib/providerErrors";
 import type { Locale } from "@/lib/i18n";
 import type { DiscoveryAssessment, DiscoveryQA } from "@/lib/types";
 
 // Numero maximo de rondas de Discovery antes de que el Consejo delibere
 // igualmente con lo que tenga. Evita que el Presidente quede atrapado en un
-// bucle de preguntas indefinido.
-export const MAX_DISCOVERY_ROUNDS = 3;
+// bucle de preguntas indefinido. Bajado de 3 a 2 para reducir el consumo de
+// llamadas al modelo gratuito (cada ronda de Discovery es una llamada mas
+// antes incluso de convocar a los especialistas).
+export const MAX_DISCOVERY_ROUNDS = 2;
 
 const JSON_INSTRUCTIONS_DISCOVERY = `
 Responde UNICAMENTE con un objeto JSON valido (sin texto adicional, sin markdown) con esta forma exacta:
@@ -123,12 +126,12 @@ export async function assessDiscovery({
         completeness: 100,
       }
     );
-  } catch {
+  } catch (err) {
     // Fail-open: un error al evaluar Discovery nunca debe bloquear al
     // Presidente indefinidamente, simplemente se pasa a deliberar.
     return {
       sufficient: true,
-      reason: "No se pudo evaluar Discovery; el Consejo delibera con la informacion disponible.",
+      reason: `No se pudo evaluar Discovery (${friendlyProviderErrorMessage(err)}); el Consejo delibera con la informacion disponible.`,
       missingInformation: [],
       questions: [],
       completeness: 100,

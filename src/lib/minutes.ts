@@ -3,6 +3,7 @@ import { getProvider } from "@/lib/aiProviders";
 import { generateDemoMinutes } from "@/lib/demoContent";
 import { SIMULATOR_PROVIDER, SIMULATOR_MODEL } from "@/lib/simulatorEngine";
 import { getLanguageInstruction } from "@/lib/promptLocale";
+import { friendlyProviderErrorMessage } from "@/lib/providerErrors";
 import type { Locale } from "@/lib/i18n";
 import type { AgentResponse, CouncilMinutes } from "@/lib/types";
 
@@ -136,9 +137,7 @@ export async function generateCouncilMinutes(
     } catch (err) {
       minutes = {
         round: 1,
-        summary: `No se pudo generar el acta: ${
-          err instanceof Error ? err.message : "error desconocido"
-        }`,
+        summary: `No se pudo generar el acta: ${friendlyProviderErrorMessage(err)}`,
         agreements: [],
         disagreements: [],
         risks: [],
@@ -298,9 +297,7 @@ export async function generateChallengeMinutes({
       minutes = {
         round,
         isModeratorOnly,
-        summary: `No se pudo generar el acta: ${
-          err instanceof Error ? err.message : "error desconocido"
-        }`,
+        summary: `No se pudo generar el acta: ${friendlyProviderErrorMessage(err)}`,
         agreements: [],
         disagreements: [],
         risks: [],

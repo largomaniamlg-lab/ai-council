@@ -46,6 +46,7 @@ export const nb: Dictionary = {
     consultButton: "Sporr Radet",
     consultingButton: "Sporrer Radet...",
     currentProblemLabel: "Naverende problem:",
+    recommendedBadge: "Anbefalt",
   },
   modes: {
     rapido: { label: "Rask", description: "Risikodirektor + Kritisk analytiker. Lav kostnad." },
@@ -173,6 +174,8 @@ export const nb: Dictionary = {
     maxRoundsReached:
       "Maks antall deliberasjonsrunder er nadd. Du kan na registrere din endelige beslutning.",
     moderatorOnlyTag: "Kun Ordstyrer",
+    challengeConsumptionHint:
+      "Dette sporrer alle spesialistene og Ordstyreren pa nytt (flere modellkall).",
   },
   settings: {
     title: "Innstillinger",

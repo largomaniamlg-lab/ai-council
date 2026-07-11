@@ -28,6 +28,9 @@ export const openrouterProvider: AIProvider = {
     });
 
     if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error("RATE_LIMIT");
+      }
       throw new Error(`OpenRouter respondio con error ${response.status}`);
     }
 

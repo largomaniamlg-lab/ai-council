@@ -299,6 +299,9 @@ export default function ActaPanel({
               >
                 {isChallenging ? t("acta.challenging") : t("acta.challengeButton")}
               </button>
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                {t("acta.challengeConsumptionHint")}
+              </p>
               <button
                 onClick={() => handleSubmitChallenge("moderator")}
                 disabled={!challengeText.trim() || busy}
