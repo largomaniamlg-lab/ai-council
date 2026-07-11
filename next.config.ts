@@ -1,23 +1,8 @@
 import type { NextConfig } from "next";
 
-// CSP pensada para lo que la app realmente usa: fetch propio (API routes),
-// Supabase (opcional) y nada de scripts/estilos externos. 'unsafe-inline' en
-// style-src es necesario porque Next.js inyecta estilos inline en dev y para
-// algunos componentes; se revisa si se puede endurecer mas adelante.
-const contentSecurityPolicy = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
-  "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co",
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-].join("; ");
-
+// El resto de cabeceras de seguridad (no dependen de un valor por peticion,
+// a diferencia del CSP con nonce, que vive en src/middleware.ts).
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: contentSecurityPolicy },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
