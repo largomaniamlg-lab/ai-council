@@ -122,6 +122,9 @@ export const en: Dictionary = {
     consultFailed: "Error consulting the Council.",
     minutesFailed: "Error generating the minutes.",
     unexpected: "Unexpected error.",
+    rateLimited: "You've temporarily hit the free-usage limit. Wait a few seconds and try again.",
+    rateLimitedNewSession: "You've hit the daily limit of new real consultations from this connection. Try Mock AI or come back tomorrow.",
+    challengeLimitReached: "This session has reached its limit of full re-deliberations. You can still ask a quick question to the Moderator.",
   },
   acta: {
     title: "Council Minutes",

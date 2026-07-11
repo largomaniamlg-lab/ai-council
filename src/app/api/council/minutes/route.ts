@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { generateCouncilMinutes } from "@/lib/minutes";
 import { saveMinutesRound, isSupabaseConfigured } from "@/lib/data";
 import { isValidText, MAX_TEXT_LENGTH } from "@/lib/validation";
+import { checkAiCallLimit, getClientIp } from "@/lib/rateLimit";
+import { tooManyAiCallsResponse } from "@/lib/rateLimitResponse";
 import type { AgentResponse } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 
@@ -39,6 +41,11 @@ export async function POST(request: Request) {
   }
   if (!isValidText(problem, MAX_ENRICHED_PROBLEM_LENGTH)) {
     return NextResponse.json({ error: "El problema o decision es demasiado largo." }, { status: 400 });
+  }
+
+  if (!mockAI) {
+    const callLimit = await checkAiCallLimit(getClientIp(request));
+    if (!callLimit.allowed) return tooManyAiCallsResponse(callLimit, locale);
   }
 
   const { minutes, markdown } = await generateCouncilMinutes(

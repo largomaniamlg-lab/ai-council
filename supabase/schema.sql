@@ -70,6 +70,13 @@ alter table sessions add column if not exists discovery_history jsonb not null d
 -- Migracion v0.5.3 (Mock AI): idem.
 alter table sessions add column if not exists source text not null default 'real' check (source in ('real', 'mock'));
 
+-- Migracion v0.6 (Rate Limiting & Quota Protection): columna preparatoria
+-- para la futura Supabase Auth + RLS (siguiente version). Nullable y sin
+-- FK todavia -- la persistencia compartida sigue desactivada
+-- (SHARED_PERSISTENCE_ENABLED = false en src/lib/supabase/server.ts) hasta
+-- que exista Auth. No abre persistencia multiusuario por si sola.
+alter table sessions add column if not exists user_id uuid;
+
 create table if not exists president_decisions (
   id uuid primary key default uuid_generate_v4(),
   session_id uuid not null references sessions(id) on delete cascade,

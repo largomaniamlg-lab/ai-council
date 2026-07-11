@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { assessDiscovery } from "@/lib/discovery";
 import { isValidText } from "@/lib/validation";
+import { checkAiCallLimit, getClientIp } from "@/lib/rateLimit";
+import { tooManyAiCallsResponse } from "@/lib/rateLimitResponse";
 import type { DiscoveryQA } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 
@@ -34,6 +36,11 @@ export async function POST(request: Request) {
   }
   if ((history ?? []).some((h) => !isValidText(h.answer))) {
     return NextResponse.json({ error: "Una de las respuestas de Discovery es demasiado larga." }, { status: 400 });
+  }
+
+  if (!mockAI) {
+    const callLimit = await checkAiCallLimit(getClientIp(request));
+    if (!callLimit.allowed) return tooManyAiCallsResponse(callLimit, locale);
   }
 
   const assessment = await assessDiscovery({

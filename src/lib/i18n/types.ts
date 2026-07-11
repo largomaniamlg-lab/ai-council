@@ -68,6 +68,9 @@ export interface Dictionary {
     consultFailed: string;
     minutesFailed: string;
     unexpected: string;
+    rateLimited: string;
+    rateLimitedNewSession: string;
+    challengeLimitReached: string;
   };
   acta: {
     title: string;

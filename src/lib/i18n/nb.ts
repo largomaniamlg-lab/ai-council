@@ -122,6 +122,9 @@ export const nb: Dictionary = {
     consultFailed: "Feil ved sporring av Radet.",
     minutesFailed: "Feil ved generering av referatet.",
     unexpected: "Uventet feil.",
+    rateLimited: "Du har midlertidig nadd den gratis bruksgrensen. Vent noen sekunder og prov igjen.",
+    rateLimitedNewSession: "Du har nadd den daglige grensen for nye reelle sporringer fra denne tilkoblingen. Prov Mock AI eller kom tilbake i morgen.",
+    challengeLimitReached: "Denne okten har nadd grensen for fullstendige revurderinger. Du kan fortsatt stille et raskt sporsmal til Ordstyreren.",
   },
   acta: {
     title: "Radets referat",

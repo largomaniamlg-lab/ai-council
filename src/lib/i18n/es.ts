@@ -122,6 +122,9 @@ export const es: Dictionary = {
     consultFailed: "Error al consultar al Consejo.",
     minutesFailed: "Error al generar el acta.",
     unexpected: "Error inesperado.",
+    rateLimited: "Has alcanzado el limite de uso gratuito temporalmente. Espera unos segundos e intentalo de nuevo.",
+    rateLimitedNewSession: "Has alcanzado el limite diario de nuevas consultas reales desde esta conexion. Prueba con Mock AI o vuelve manana.",
+    challengeLimitReached: "Se ha alcanzado el limite de reconsideraciones completas para esta sesion. Puedes seguir con una pregunta rapida al Moderador.",
   },
   acta: {
     title: "Acta del Consejo",

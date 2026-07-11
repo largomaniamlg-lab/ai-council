@@ -3,8 +3,21 @@ import { continueDeliberation, MAX_DELIBERATION_ROUNDS } from "@/lib/orchestrato
 import { generateChallengeMinutes } from "@/lib/minutes";
 import { saveAgentResponses, saveMinutesRound, isSupabaseConfigured } from "@/lib/data";
 import { isValidText } from "@/lib/validation";
+import { checkAiCallLimit, getClientIp } from "@/lib/rateLimit";
+import { tooManyAiCallsResponse, challengeLimitResponse } from "@/lib/rateLimitResponse";
 import type { AgentResponse, CouncilMinutes } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
+
+// Tope de reconsideraciones completas (Modo A) por sesion, ademas del tope
+// global de rondas (MAX_DELIBERATION_ROUNDS). Se deriva del propio
+// historial que ya envia el cliente en cada peticion (una ronda "completa"
+// es una que tiene stance en al menos un especialista) - no requiere
+// almacenar nada nuevo por sesion en el servidor.
+const MAX_FULL_CHALLENGES_PER_SESSION = 2;
+
+function countFullChallengeRounds(history: AgentResponse[]): number {
+  return new Set(history.filter((r) => r.stance).map((r) => r.round)).size;
+}
 
 // Ver nota en app/api/council/session/route.ts sobre el limite de Vercel.
 export const maxDuration = 120;
@@ -64,6 +77,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Falta la lista de especialistas de la sesion (roleIds)." }, { status: 400 });
   }
 
+  if (!mockAI) {
+    const callLimit = await checkAiCallLimit(getClientIp(request));
+    if (!callLimit.allowed) return tooManyAiCallsResponse(callLimit, locale);
+  }
+
   if (challengeMode === "full") {
     if (nextRound > MAX_DELIBERATION_ROUNDS) {
       return NextResponse.json(
@@ -72,6 +90,9 @@ export async function POST(request: Request) {
         },
         { status: 400 }
       );
+    }
+    if (!mockAI && countFullChallengeRounds(history ?? []) >= MAX_FULL_CHALLENGES_PER_SESSION) {
+      return challengeLimitResponse(locale);
     }
 
     const responses = await continueDeliberation({

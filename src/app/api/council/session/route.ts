@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { runCouncil } from "@/lib/orchestrator";
 import { createSession, saveAgentResponses, isSupabaseConfigured } from "@/lib/data";
 import { isValidText, MAX_TEXT_LENGTH } from "@/lib/validation";
+import { checkAiCallLimit, checkNewSessionLimit, getClientIp } from "@/lib/rateLimit";
+import { tooManyAiCallsResponse, tooManyNewSessionsResponse } from "@/lib/rateLimitResponse";
 import type { CouncilMode } from "@/config/councilRoles";
 import type { Locale } from "@/lib/i18n";
 import type { DiscoveryQA } from "@/lib/types";
@@ -47,6 +49,14 @@ export async function POST(request: Request) {
   }
   if (!mode) {
     return NextResponse.json({ error: "Falta el modo del Consejo (mode)." }, { status: 400 });
+  }
+
+  if (!mockAI) {
+    const ip = getClientIp(request);
+    const callLimit = await checkAiCallLimit(ip);
+    if (!callLimit.allowed) return tooManyAiCallsResponse(callLimit, locale);
+    const sessionLimit = await checkNewSessionLimit(ip);
+    if (!sessionLimit.allowed) return tooManyNewSessionsResponse(sessionLimit, locale);
   }
 
   const result = await runCouncil({ problem, mode, manualRoleIds, useDemoMode, locale, mockAI });
